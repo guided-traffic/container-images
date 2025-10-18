@@ -80,8 +80,8 @@ jobs:
           else
             # Build proper JSON array using jq if available, otherwise manual construction
             if command -v jq >/dev/null 2>&1; then
-              # Use jq for robust JSON array construction
-              matrix=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -s .)
+              # Use jq for robust JSON array construction (compact format)
+              matrix=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -s -c .)
             else
               # Fallback to manual construction
               matrix="["
