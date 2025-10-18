@@ -33,7 +33,7 @@ ENV GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
 ENV DOWNLOAD_URL=${GITHUB_URL}
 
 RUN echo "Installing etcd version: ${ETCD_VER}" && \
-    curl -L ${DOWNLOAD_URL}/v${ETCD_VER}/etcd-v${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz && \
+    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz && \
     mkdir -p /tmp/etcd-download && \
     tar xzvf /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 && \
     cp /tmp/etcd-download/etcd /usr/local/bin/ && \
