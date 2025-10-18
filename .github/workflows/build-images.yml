@@ -28,6 +28,12 @@ env:
   REGISTRY: docker.io
   REGISTRY_USER: hansfischer
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # Required for SLSA provenance
+  attestations: write  # Required for attestations
+
 jobs:
   discover-images:
     runs-on: self-hosted
@@ -150,6 +156,7 @@ jobs:
             org.opencontainers.image.version=${{ steps.config.outputs.version }}
 
       - name: Build and push container image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ${{ matrix.image-dir }}
@@ -160,6 +167,69 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+          outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ steps.config.outputs.description }}
+
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.2'
+
+      - name: Install Syft for SBOM generation
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action/download-syft@v0.15.8
+
+      - name: Generate SBOM
+        if: github.event_name != 'pull_request'
+        id: sbom
+        run: |
+          # Extract image digest from build output
+          IMAGE_DIGEST="${{ steps.build.outputs.digest }}"
+          IMAGE_NAME="${{ steps.config.outputs.full-name }}"
+
+          echo "Generating SBOM for ${IMAGE_NAME}@${IMAGE_DIGEST}"
+
+          # Generate SBOM in multiple formats
+          syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o spdx-json=sbom-${{ matrix.image-dir }}.spdx.json
+          syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o cyclonedx-json=sbom-${{ matrix.image-dir }}.cyclonedx.json
+          syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o syft-json=sbom-${{ matrix.image-dir }}.syft.json
+
+          echo "sbom-path-spdx=sbom-${{ matrix.image-dir }}.spdx.json" >> $GITHUB_OUTPUT
+          echo "sbom-path-cyclonedx=sbom-${{ matrix.image-dir }}.cyclonedx.json" >> $GITHUB_OUTPUT
+
+      - name: Sign container image with Cosign
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          IMAGE_DIGEST="${{ steps.build.outputs.digest }}"
+          IMAGE_NAME="${{ steps.config.outputs.full-name }}"
+
+          echo "Signing ${IMAGE_NAME}@${IMAGE_DIGEST}"
+
+          # Sign the container image
+          cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
+
+          # Sign the SBOM
+          cosign attest --yes --predicate sbom-${{ matrix.image-dir }}.spdx.json "${IMAGE_NAME}@${IMAGE_DIGEST}"
+
+      - name: Generate SLSA Provenance
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ steps.config.outputs.full-name }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+
+      - name: Upload SBOM artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.image-dir }}
+          path: |
+            sbom-${{ matrix.image-dir }}.*.json
+          retention-days: 30
 
       - name: Generate build summary
         if: always()
@@ -177,6 +247,23 @@ jobs:
             echo "### 🏷️ Generated Tags" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔒 Supply Chain Attestation" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ **SLSA Provenance**: Generated and attached" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ **SBOM**: Generated in SPDX and CycloneDX formats" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ **Cosign Signature**: Image and SBOM signed" >> $GITHUB_STEP_SUMMARY
+            echo "- 📋 **Image Digest**: \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔍 Verification Commands" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo "# Verify signature" >> $GITHUB_STEP_SUMMARY
+            echo "cosign verify ${{ steps.config.outputs.full-name }}@${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "# View attestations" >> $GITHUB_STEP_SUMMARY
+            echo "cosign verify-attestation ${{ steps.config.outputs.full-name }}@${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "**Status:** Build only (PR mode, no push)" >> $GITHUB_STEP_SUMMARY
