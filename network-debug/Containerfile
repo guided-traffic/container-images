@@ -1,0 +1,36 @@
+FROM ubuntu:24.04
+
+# Update package lists and install security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    # Basic shell and utilities
+    git \
+    ntp \
+    iptraf \
+    sysstat \
+    dkms \
+    wget \
+    curl \
+    htop \
+    ca-certificates \
+    sed \
+    net-tools \
+    iw \
+    iproute2 \
+    wireless-tools \
+    aptitude \
+    vim \
+    dnsutils \
+    screen \
+    telnet \
+    iputils-ping \
+    tcpdump \
+    traceroute \
+    gnupg \
+    lsb-release \
+    # Clean up package cache to reduce image size
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+CMD ["sleep", "infinity"]
