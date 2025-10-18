@@ -1,0 +1,11 @@
+name: etcd-client
+version: 1.0.0
+description: Ubuntu minimal container with etcd client
+registry: hansfischer
+maintainer: Hans Fischer
+platforms:
+  - linux/amd64
+  - linux/arm64
+tags:
+  - latest
+  - stable

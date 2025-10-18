@@ -1,0 +1,49 @@
+# Ubuntu minimal base image with latest patches and etcd client
+FROM ubuntu:24.04
+
+# Set labels for container metadata
+LABEL maintainer="Hans Fischer"
+LABEL description="Ubuntu minimal container with etcd client"
+LABEL version="1.0"
+
+# Update package lists and install security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    # Basic shell and utilities
+    bash \
+    curl \
+    wget \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    # Clean up package cache to reduce image size
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install etcd client
+# Get the latest stable version of etcd
+ENV ETCD_VER=v3.5.10
+ENV GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
+ENV DOWNLOAD_URL=${GITHUB_URL}
+
+RUN ETCD_VER=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep -Po '"tag_name": "v\K[^"]*') && \
+    curl -L ${DOWNLOAD_URL}/v${ETCD_VER}/etcd-v${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz && \
+    mkdir -p /tmp/etcd-download && \
+    tar xzvf /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 && \
+    cp /tmp/etcd-download/etcd /usr/local/bin/ && \
+    cp /tmp/etcd-download/etcdctl /usr/local/bin/ && \
+    cp /tmp/etcd-download/etcdutl /usr/local/bin/ && \
+    rm -rf /tmp/etcd-download /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz
+
+# Verify etcd client installation
+RUN etcdctl version && etcd --version
+
+# Set working directory
+WORKDIR /app
+
+# Default shell
+SHELL ["/bin/bash", "-c"]
+
+# Default command starts an interactive shell
+CMD ["/bin/bash"]
