@@ -1,10 +1,15 @@
 # Ubuntu minimal base image with latest patches and etcd client
 FROM ubuntu:24.04
 
+# Build argument for etcd version (passed from image.yml version)
+ARG ETCD_VERSION=3.5.21
+ARG IMAGE_VERSION=3.5.21
+
 # Set labels for container metadata
 LABEL maintainer="Hans Fischer"
-LABEL description="Ubuntu minimal container with etcd client"
-LABEL version="1.0"
+LABEL description="Ubuntu minimal container with etcd client v${ETCD_VERSION}"
+LABEL version="${IMAGE_VERSION}"
+LABEL etcd.version="${ETCD_VERSION}"
 
 # Update package lists and install security updates
 RUN apt-get update && \
@@ -22,12 +27,12 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install etcd client
-# Get the latest stable version of etcd
-ENV ETCD_VER=v3.5.10
+# Use the version passed as build argument
+ENV ETCD_VER=v${ETCD_VERSION}
 ENV GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
 ENV DOWNLOAD_URL=${GITHUB_URL}
 
-RUN ETCD_VER=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep -Po '"tag_name": "v\K[^"]*') && \
+RUN echo "Installing etcd version: ${ETCD_VER}" && \
     curl -L ${DOWNLOAD_URL}/v${ETCD_VER}/etcd-v${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz && \
     mkdir -p /tmp/etcd-download && \
     tar xzvf /tmp/etcd-v${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 && \

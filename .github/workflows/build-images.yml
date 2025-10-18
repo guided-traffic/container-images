@@ -165,6 +165,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ETCD_VERSION=${{ steps.config.outputs.version }}
+            IMAGE_VERSION=${{ steps.config.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: true
