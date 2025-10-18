@@ -2,8 +2,9 @@
 FROM ubuntu:24.04
 
 # Build argument for etcd version (passed from image.yml version)
-ARG ETCD_VERSION=3.5.21
-ARG IMAGE_VERSION=3.5.21
+ARG ETCD_VERSION
+ARG IMAGE_VERSION
+ARG TARGETARCH
 
 # Set labels for container metadata
 LABEL maintainer="Hans Fischer"
@@ -33,13 +34,13 @@ ENV GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
 ENV DOWNLOAD_URL=${GITHUB_URL}
 
 RUN echo "Installing etcd version: ${ETCD_VER}" && \
-    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz && \
+    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-${TARGETARCH}.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-${TARGETARCH}.tar.gz && \
     mkdir -p /tmp/etcd-download && \
-    tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download --strip-components=1 && \
+    tar xzvf /tmp/etcd-${ETCD_VER}-linux-${TARGETARCH}.tar.gz -C /tmp/etcd-download --strip-components=1 && \
     cp /tmp/etcd-download/etcd /usr/local/bin/ && \
     cp /tmp/etcd-download/etcdctl /usr/local/bin/ && \
     cp /tmp/etcd-download/etcdutl /usr/local/bin/ && \
-    rm -rf /tmp/etcd-download /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+    rm -rf /tmp/etcd-download /tmp/etcd-${ETCD_VER}-linux-${TARGETARCH}.tar.gz
 
 # Verify etcd client installation
 RUN etcdctl version && etcd --version
