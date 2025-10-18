@@ -33,6 +33,7 @@ permissions:
   packages: write
   id-token: write  # Required for SLSA provenance
   attestations: write  # Required for attestations
+  security-events: write  # Required for SARIF upload
 
 jobs:
   discover-images:
@@ -276,6 +277,9 @@ jobs:
     needs: [discover-images, build-images]
     if: needs.discover-images.outputs.matrix != '[""]' && github.event_name != 'pull_request'
     runs-on: self-hosted
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
