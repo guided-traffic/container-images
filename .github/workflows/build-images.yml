@@ -123,8 +123,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.REGISTRY_USER }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: hansfischer
+          password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Generate metadata
         id: meta
