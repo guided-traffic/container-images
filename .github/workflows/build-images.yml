@@ -149,8 +149,6 @@ jobs:
             type=ref,event=branch,enable=${{ github.ref_name != 'main' }}
             # PR number for pull requests
             type=ref,event=pr
-            # Git short SHA
-            type=sha,prefix={{branch}}-,format=short
           labels: |
             org.opencontainers.image.title=${{ steps.config.outputs.name }}
             org.opencontainers.image.description=${{ steps.config.outputs.description }}
