@@ -75,15 +75,35 @@ jobs:
           done
 
           # Convert to JSON array
-          printf -v joined '%s,' "${dirs[@]}"
-          matrix="[\"${joined%,}\"]"
+          if [ ${#dirs[@]} -eq 0 ]; then
+            matrix="[]"
+          else
+            # Build proper JSON array using jq if available, otherwise manual construction
+            if command -v jq >/dev/null 2>&1; then
+              # Use jq for robust JSON array construction
+              matrix=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -s .)
+            else
+              # Fallback to manual construction
+              matrix="["
+              first=true
+              for dir in "${dirs[@]}"; do
+                if [ "$first" = true ]; then
+                  first=false
+                else
+                  matrix+=","
+                fi
+                matrix+="\"$dir\""
+              done
+              matrix+="]"
+            fi
+          fi
 
           echo "Found directories: ${dirs[*]}"
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   build-images:
     needs: discover-images
-    if: needs.discover-images.outputs.matrix != '[""]'
+    if: needs.discover-images.outputs.matrix != '[]'
     runs-on: self-hosted
     strategy:
       fail-fast: false
@@ -273,7 +293,7 @@ jobs:
 
   security-scan:
     needs: [discover-images, build-images]
-    if: needs.discover-images.outputs.matrix != '[""]' && github.event_name != 'pull_request'
+    if: needs.discover-images.outputs.matrix != '[]' && github.event_name != 'pull_request'
     runs-on: self-hosted
     permissions:
       contents: read
