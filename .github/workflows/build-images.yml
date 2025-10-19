@@ -12,6 +12,9 @@ on:
     paths:
       - '**/Containerfile'
       - '**/image.yml'
+  schedule:
+    # Run every Sunday at 20:00 UTC (8 PM) to rebuild all images
+    - cron: '0 20 * * 0'
   workflow_dispatch:
     inputs:
       force_rebuild:
@@ -65,7 +68,9 @@ jobs:
                 fi
               else
                 # Check if files changed in this directory (for non-force builds)
+                # Always rebuild for scheduled runs (weekly rebuild), force rebuild, or workflow dispatch
                 if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] || \
+                   [[ "${{ github.event_name }}" == "schedule" ]] || \
                    git diff --name-only HEAD~1 HEAD | grep -q "^${dir}" || \
                    [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
                   dirs+=("$dir_name")
