@@ -211,6 +211,9 @@ jobs:
       - name: Generate SBOM
         if: github.event_name != 'pull_request'
         id: sbom
+        env:
+          # Ensure Docker credentials are available for private repositories
+          DOCKER_CONFIG: /home/runner/.docker
         run: |
           # Extract image digest from build output
           IMAGE_DIGEST="${{ steps.build.outputs.digest }}"
@@ -218,29 +221,57 @@ jobs:
 
           echo "Generating SBOM for ${IMAGE_NAME}@${IMAGE_DIGEST}"
 
+          # Verify we can access the image before generating SBOM
+          echo "Verifying image access for SBOM generation..."
+          docker manifest inspect "${IMAGE_NAME}@${IMAGE_DIGEST}" > /dev/null || {
+            echo "❌ Cannot access image for SBOM generation"
+            exit 1
+          }
+
           # Generate SBOM in multiple formats
+          echo "Generating SPDX SBOM..."
           syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o spdx-json=sbom-${{ matrix.image-dir }}.spdx.json
+
+          echo "Generating CycloneDX SBOM..."
           syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o cyclonedx-json=sbom-${{ matrix.image-dir }}.cyclonedx.json
+
+          echo "Generating Syft native SBOM..."
           syft "${IMAGE_NAME}@${IMAGE_DIGEST}" -o syft-json=sbom-${{ matrix.image-dir }}.syft.json
 
           echo "sbom-path-spdx=sbom-${{ matrix.image-dir }}.spdx.json" >> $GITHUB_OUTPUT
           echo "sbom-path-cyclonedx=sbom-${{ matrix.image-dir }}.cyclonedx.json" >> $GITHUB_OUTPUT
 
+          echo "✅ SBOM generation completed successfully"
+
       - name: Sign container image with Cosign
         if: github.event_name != 'pull_request'
         env:
           COSIGN_EXPERIMENTAL: 1
+          # Ensure Docker credentials are available for private repositories
+          DOCKER_CONFIG: /home/runner/.docker
         run: |
           IMAGE_DIGEST="${{ steps.build.outputs.digest }}"
           IMAGE_NAME="${{ steps.config.outputs.full-name }}"
 
           echo "Signing ${IMAGE_NAME}@${IMAGE_DIGEST}"
 
+          # Verify we can access the image (important for private repos)
+          echo "Verifying image access..."
+          docker manifest inspect "${IMAGE_NAME}@${IMAGE_DIGEST}" > /dev/null || {
+            echo "❌ Cannot access image ${IMAGE_NAME}@${IMAGE_DIGEST}"
+            echo "This may indicate the image is private and credentials are not properly configured"
+            exit 1
+          }
+
           # Sign the container image
+          echo "Signing container image..."
           cosign sign --yes "${IMAGE_NAME}@${IMAGE_DIGEST}"
 
           # Sign the SBOM
+          echo "Signing SBOM attestation..."
           cosign attest --yes --predicate sbom-${{ matrix.image-dir }}.spdx.json "${IMAGE_NAME}@${IMAGE_DIGEST}"
+
+          echo "✅ Successfully signed image and SBOM"
 
       - name: Generate SLSA Provenance
         if: github.event_name != 'pull_request'
@@ -248,6 +279,36 @@ jobs:
         with:
           subject-name: ${{ steps.config.outputs.full-name }}
           subject-digest: ${{ steps.build.outputs.digest }}
+
+      - name: Set Docker Hub repository to public
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE_NAME="${{ steps.config.outputs.name }}"
+          REGISTRY_USER="${{ steps.config.outputs.registry }}"
+
+          echo "Setting repository ${REGISTRY_USER}/${IMAGE_NAME} to public..."
+
+          # Get Docker Hub API token
+          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+
+          if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
+            echo "❌ Failed to authenticate with Docker Hub API"
+            exit 1
+          fi
+
+          # Set repository visibility to public
+          RESPONSE=$(curl -s -X PATCH \
+            -H "Authorization: JWT ${HUB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"is_private": false}' \
+            "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+
+          if echo "$RESPONSE" | jq -e '.is_private == false' > /dev/null; then
+            echo "✅ Repository ${REGISTRY_USER}/${IMAGE_NAME} successfully set to public"
+          else
+            echo "⚠️ Could not verify repository visibility change"
+            echo "Response: $RESPONSE"
+          fi
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
