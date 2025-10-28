@@ -1,0 +1,8 @@
+name: thanos
+version: 0.40.0
+description: Thanos is a minimal debian container with Thanos binary
+registry: hansfischer
+maintainer: Hans Fischer
+platforms:
+  - linux/amd64
+  - linux/arm64

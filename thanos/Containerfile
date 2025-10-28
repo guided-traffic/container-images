@@ -1,0 +1,52 @@
+FROM debian:13.1-slim
+
+# Build arguments for Thanos version
+ARG THANOS_VERSION=0.40.0
+ARG IMAGE_VERSION=0.40.0
+
+# Update package lists and install security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    # Basic shell and utilities
+    ca-certificates \
+    curl \
+    tar \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install Thanos binary
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then ARCH="amd64"; fi && \
+    if [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi && \
+    curl -L -o /tmp/thanos.tar.gz "https://github.com/thanos-io/thanos/releases/download/v${THANOS_VERSION}/thanos-${THANOS_VERSION}.linux-${ARCH}.tar.gz" && \
+    tar -xzf /tmp/thanos.tar.gz -C /tmp && \
+    mv /tmp/thanos-${THANOS_VERSION}.linux-${ARCH}/thanos /usr/local/bin/thanos && \
+    chmod +x /usr/local/bin/thanos && \
+    rm -rf /tmp/thanos*
+
+# Create thanos user
+RUN groupadd -r thanos && useradd -r -g thanos thanos
+
+# Create data directory
+RUN mkdir -p /var/thanos && chown -R thanos:thanos /var/thanos
+
+# Switch to non-root user
+USER thanos
+
+# Set working directory
+WORKDIR /var/thanos
+
+# Expose ports commonly used by Thanos components
+EXPOSE 10901 10902 10903 10904 19291
+
+# Labels
+LABEL org.opencontainers.image.title="Thanos" \
+      org.opencontainers.image.description="Thanos is a minimal debian container with Thanos binary" \
+      org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.vendor="Hans Fischer" \
+      org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
+
+# Default command
+ENTRYPOINT ["/usr/local/bin/thanos"]
+CMD ["--help"]
