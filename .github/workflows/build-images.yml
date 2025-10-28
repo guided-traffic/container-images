@@ -373,6 +373,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Log in to Docker Hub for security scanning
+        uses: docker/login-action@v3
+        with:
+          username: hansfischer
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
       - name: Parse image configuration
         id: config
         run: |
@@ -382,12 +388,26 @@ jobs:
           REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | tr -d '"')
           echo "full-name=$REGISTRY/$NAME:$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Pull image for security scanning
+        run: |
+          IMAGE_REF="${{ steps.config.outputs.full-name }}"
+          echo "Pulling image for security scan: ${IMAGE_REF}"
+
+          # Pull the image to make it available locally for Trivy
+          docker pull "${IMAGE_REF}"
+
+          # Verify the image is available locally
+          docker images "${IMAGE_REF}" --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.Size}}"
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.config.outputs.full-name }}
           format: 'sarif'
           output: 'trivy-results-${{ matrix.image-dir }}.sarif'
+          # Enable Docker daemon mode for private images
+          scan-type: 'image'
+          hide-progress: false
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
