@@ -4,7 +4,6 @@
     "config:recommended"
   ],
   "timezone": "Europe/Berlin",
-  "schedule": ["before 6am every weekday"],
   "prConcurrentLimit": 5,
   "prHourlyLimit": 5,
   "commitMessagePrefix": "chore(deps): ",
