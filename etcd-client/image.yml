@@ -1,6 +1,10 @@
 name: etcd-client
 version: 3.5.21
 description: Ubuntu minimal container with etcd client
+category:
+  - ubuntu
+  - etcd
+  - regular build
 registry: hansfischer
 maintainer: Hans Fischer
 platforms:
