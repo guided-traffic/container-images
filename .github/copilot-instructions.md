@@ -125,7 +125,6 @@ LABEL org.opencontainers.image.title="My Image" \
 ```
 hansfischer/etcd-client:3.5.21    # Version from image.yml
 hansfischer/etcd-client:latest    # Only on main branch
-hansfischer/etcd-client:stable    # Only on main branch
 hansfischer/etcd-client:develop   # On develop branch
 hansfischer/etcd-client:pr-42     # On pull requests
 ```

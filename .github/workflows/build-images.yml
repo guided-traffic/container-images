@@ -168,8 +168,6 @@ jobs:
             type=raw,value=${{ steps.config.outputs.version }}
             # Latest tag for main branch
             type=raw,value=latest,enable={{is_default_branch}}
-            # Stable tag for main branch
-            type=raw,value=stable,enable={{is_default_branch}}
             # Branch name for non-main branches
             type=ref,event=branch,enable=${{ github.ref_name != 'main' }}
             # PR number for pull requests
