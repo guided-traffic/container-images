@@ -37,6 +37,17 @@
       "extractVersionTemplate": "^v?(?<version>.*)$"
     },
     {
+      "description": "Update Thanos version in thanos image.yml",
+      "fileMatch": ["^thanos/image\\.ya?ml$"],
+      "matchStrings": [
+        "name:\\s*thanos\\s*\\nversion:\\s*(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "thanos-io/thanos",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
       "description": "Update base image versions in Containerfiles",
       "fileMatch": ["(^|/)Containerfile$"],
       "matchStrings": [
