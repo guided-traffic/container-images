@@ -1,5 +1,5 @@
 name: etcd-client
-version: 3.5.21
+version: 3.6.5
 description: Ubuntu minimal container with etcd client
 category:
   - ubuntu
