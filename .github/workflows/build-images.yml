@@ -131,6 +131,8 @@ jobs:
             DESCRIPTION=$(yq e '.description' image.yml)
             REGISTRY=$(yq e '.registry' image.yml)
             PLATFORMS=$(yq e '.platforms | join(",")' image.yml)
+            # Parse categories as comma-separated string for Docker Hub
+            CATEGORIES=$(yq e '.category | join(",")' image.yml)
           else
             # Fallback parsing without yq
             NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | tr -d '"')
@@ -138,6 +140,8 @@ jobs:
             DESCRIPTION=$(grep '^description:' image.yml | cut -d' ' -f2- | tr -d '"')
             REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | tr -d '"')
             PLATFORMS="linux/amd64,linux/arm64"
+            # Parse categories (simple extraction from YAML array)
+            CATEGORIES=$(grep -A 10 '^category:' image.yml | grep '  -' | sed 's/  - //' | tr '\n' ',' | sed 's/,$//')
           fi
 
           echo "name=$NAME" >> $GITHUB_OUTPUT
@@ -145,6 +149,7 @@ jobs:
           echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
           echo "registry=$REGISTRY" >> $GITHUB_OUTPUT
           echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+          echo "categories=$CATEGORIES" >> $GITHUB_OUTPUT
           echo "full-name=$REGISTRY/$NAME" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
@@ -307,6 +312,72 @@ jobs:
             echo "⚠️ Could not verify repository visibility change"
             echo "Response: $RESPONSE"
           fi
+
+      - name: Update Docker Hub repository metadata
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE_NAME="${{ steps.config.outputs.name }}"
+          REGISTRY_USER="${{ steps.config.outputs.registry }}"
+          DESCRIPTION="${{ steps.config.outputs.description }}"
+          CATEGORIES="${{ steps.config.outputs.categories }}"
+
+          echo "Updating metadata for ${REGISTRY_USER}/${IMAGE_NAME}..."
+          echo "Description: ${DESCRIPTION}"
+          echo "Categories: ${CATEGORIES}"
+
+          # Get Docker Hub API token
+          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+
+          if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
+            echo "❌ Failed to authenticate with Docker Hub API"
+            exit 1
+          fi
+
+          # Update repository description and overview
+          # Docker Hub API expects full_description (README) and description (short description)
+          UPDATE_PAYLOAD=$(jq -n \
+            --arg desc "$DESCRIPTION" \
+            --arg full_desc "$DESCRIPTION" \
+            '{description: $desc, full_description: $full_desc}')
+
+          RESPONSE=$(curl -s -X PATCH \
+            -H "Authorization: JWT ${HUB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATE_PAYLOAD" \
+            "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+
+          if echo "$RESPONSE" | jq -e '.description' > /dev/null 2>&1; then
+            echo "✅ Successfully updated repository description"
+          else
+            echo "⚠️ Could not verify description update"
+            echo "Response: $RESPONSE"
+          fi
+
+          # Update categories if available
+          if [ -n "$CATEGORIES" ]; then
+            # Convert comma-separated categories to JSON array
+            CATEGORIES_JSON=$(echo "$CATEGORIES" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$"; ""))')
+
+            # Update categories using the categories API endpoint
+            CATEGORIES_PAYLOAD=$(jq -n --argjson cats "$CATEGORIES_JSON" '{categories: $cats}')
+
+            echo "Updating categories with: $CATEGORIES_PAYLOAD"
+
+            CATEGORIES_RESPONSE=$(curl -s -X PATCH \
+              -H "Authorization: JWT ${HUB_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "$CATEGORIES_PAYLOAD" \
+              "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+
+            if echo "$CATEGORIES_RESPONSE" | jq -e '.categories' > /dev/null 2>&1; then
+              echo "✅ Successfully updated repository categories"
+            else
+              echo "⚠️ Could not verify categories update (this may not be supported by Docker Hub API)"
+              echo "Response: $CATEGORIES_RESPONSE"
+            fi
+          fi
+
+          echo "✅ Docker Hub metadata update completed"
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
