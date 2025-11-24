@@ -1,4 +1,5 @@
 # Ubuntu minimal base image with latest patches and etcd client
+# renovate: datasource=docker depName=ubuntu versioning=docker
 FROM ubuntu:24.04
 
 # Build argument for etcd version (passed from image.yml version)

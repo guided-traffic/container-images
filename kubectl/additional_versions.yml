@@ -1,0 +1,27 @@
+# Additional kubectl versions to build alongside the main version from image.yml
+#
+# The main image.yml contains the NEWEST kubectl version (currently 1.31.x) which is
+# automatically updated by Renovate.
+#
+# This file lists OLDER versions that should also be built to support the last 3
+# Kubernetes minor versions (as per Kubernetes version skew policy).
+#
+# Tags generated:
+#   - From image.yml: kubectl:1.31.3, kubectl:1.31, kubectl:latest
+#   - From this file:  kubectl:1.30.5, kubectl:1.30
+#                     kubectl:1.29.8, kubectl:1.29
+#
+# Maintenance:
+# - Patch versions: Renovate updates automatically
+# - Minor version shift: Manual update required when new K8s version releases (~4x/year)
+#   Example: When K8s 1.32 is released:
+#     1. Update image.yml to version: 1.32.x (Renovate will do this)
+#     2. Update this file to remove 1.29 and add 1.31
+
+versions:
+  # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
+  - minor: "1.33"
+    patch: "2"      # Renovate updates automatically
+  # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
+  - minor: "1.32"
+    patch: "2"      # Renovate updates automatically
