@@ -85,8 +85,15 @@ jobs:
                 fi
               fi
 
+              # Extract image name from image.yml for display
+              if command -v yq >/dev/null 2>&1; then
+                image_name=$(yq e '.name' "${dir}image.yml")
+              else
+                image_name=$(grep '^name:' "${dir}image.yml" | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+              fi
+
               # Add main image build (from image.yml)
-              matrix_entries+=("{\"image-dir\":\"$dir_name\"}")
+              matrix_entries+=("{\"image-dir\":\"$dir_name\",\"image-name\":\"$image_name\"}")
 
               # Check for additional_versions.yml to build older versions
               if [[ -f "${dir}additional_versions.yml" ]]; then
@@ -102,7 +109,7 @@ jobs:
                     if [[ -n "$minor" && -n "$patch" ]]; then
                       version="${minor}.${patch}"
                       echo "  Adding additional version: $version"
-                      matrix_entries+=("{\"image-dir\":\"$dir_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
+                      matrix_entries+=("{\"image-dir\":\"$dir_name\",\"image-name\":\"$image_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
                     fi
                   done
                 else
@@ -118,7 +125,7 @@ jobs:
                       if [[ -n "$minor" && -n "$patch" ]]; then
                         version="${minor}.${patch}"
                         echo "  Adding additional version: $version"
-                        matrix_entries+=("{\"image-dir\":\"$dir_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
+                        matrix_entries+=("{\"image-dir\":\"$dir_name\",\"image-name\":\"$image_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
                         minor=""
                         patch=""
                       fi
@@ -160,6 +167,7 @@ jobs:
     needs: discover-images
     if: needs.discover-images.outputs.matrix != '[]'
     runs-on: self-hosted
+    name: ${{ matrix.image-name }}${{ matrix.version && format(' ({0})', matrix.version) || '' }}
     strategy:
       fail-fast: false
       matrix:
