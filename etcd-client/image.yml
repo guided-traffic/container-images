@@ -1,4 +1,5 @@
-name: etcd-client  #source: https://github.com/etcd-io/etcd
+# Source: https://github.com/etcd-io/etcd
+name: etcd-client
 version: 3.6.6
 description: Ubuntu minimal container with etcd client
 category:

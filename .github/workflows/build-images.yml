@@ -134,11 +134,11 @@ jobs:
             # Parse categories as comma-separated string for Docker Hub
             CATEGORIES=$(yq e '.category | join(",")' image.yml)
           else
-            # Fallback parsing without yq
-            NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | tr -d '"')
-            VERSION=$(grep '^version:' image.yml | cut -d' ' -f2- | tr -d '"')
-            DESCRIPTION=$(grep '^description:' image.yml | cut -d' ' -f2- | tr -d '"')
-            REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | tr -d '"')
+            # Fallback parsing without yq - strip inline comments (anything after #)
+            NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+            VERSION=$(grep '^version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+            DESCRIPTION=$(grep '^description:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '"' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
             PLATFORMS="linux/amd64,linux/arm64"
             # Parse categories (simple extraction from YAML array)
             CATEGORIES=$(grep -A 10 '^category:' image.yml | grep '  -' | sed 's/  - //' | tr '\n' ',' | sed 's/,$//')
@@ -452,9 +452,10 @@ jobs:
         id: config
         run: |
           cd "${{ matrix.image-dir }}"
-          NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | tr -d '"')
-          VERSION=$(grep '^version:' image.yml | cut -d' ' -f2- | tr -d '"')
-          REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | tr -d '"')
+          # Strip inline comments (anything after #) to avoid parsing issues
+          NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+          VERSION=$(grep '^version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+          REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
           echo "full-name=$REGISTRY/$NAME:$VERSION" >> $GITHUB_OUTPUT
 
       - name: Pull image for security scanning
