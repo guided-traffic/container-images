@@ -339,7 +339,7 @@ jobs:
 
       - name: Install Syft for SBOM generation
         if: github.event_name != 'pull_request'
-        uses: anchore/sbom-action/download-syft@v0.15.8
+        uses: anchore/sbom-action/download-syft@v0.20.10
 
       - name: Generate SBOM
         if: github.event_name != 'pull_request'
