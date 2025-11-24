@@ -5,7 +5,7 @@ category:
   - ubuntu
   - etcd
   - regular build
-registry: hansfischer
+registry: guidedtraffic
 maintainer: Hans Fischer
 platforms:
   - linux/amd64

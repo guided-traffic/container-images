@@ -12,25 +12,25 @@ This repository provides continuously updated container images that are:
 
 ## 📦 Available Images
 
-All images are published to Docker Hub: **[hansfischer on Docker Hub](https://hub.docker.com/u/hansfischer)**
+All images are published to Docker Hub: **[guidedtraffic on Docker Hub](https://hub.docker.com/u/guidedtraffic)**
 
 | Image | Description | Docker Hub |
 |-------|-------------|------------|
-| `etcd-client` | Ubuntu minimal with etcd client tools | [hansfischer/etcd-client](https://hub.docker.com/r/hansfischer/etcd-client) |
-| `network-debug` | Network debugging toolkit | [hansfischer/network-debug](https://hub.docker.com/r/hansfischer/network-debug) |
-| `thanos` | Thanos monitoring on Debian slim | [hansfischer/thanos](https://hub.docker.com/r/hansfischer/thanos) |
+| `etcd-client` | Ubuntu minimal with etcd client tools | [guidedtraffic/etcd-client](https://hub.docker.com/r/guidedtraffic/etcd-client) |
+| `network-debug` | Network debugging toolkit | [guidedtraffic/network-debug](https://hub.docker.com/r/guidedtraffic/network-debug) |
+| `thanos` | Thanos monitoring on Debian slim | [guidedtraffic/thanos](https://hub.docker.com/r/guidedtraffic/thanos) |
 
 ## 🚀 Quick Start
 
 ```bash
 # Pull an image
-docker pull hansfischer/etcd-client:latest
+docker pull guidedtraffic/etcd-client:latest
 
 # Verify signature (requires cosign)
-cosign verify hansfischer/etcd-client:latest
+cosign verify guidedtraffic/etcd-client:latest
 
 # View SBOM
-docker sbom hansfischer/etcd-client:latest
+docker sbom guidedtraffic/etcd-client:latest
 ```
 
 ## 🔒 Security

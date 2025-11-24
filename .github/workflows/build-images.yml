@@ -29,7 +29,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  REGISTRY_USER: hansfischer
+  REGISTRY_USER: guidedtraffic
 
 permissions:
   contents: read
@@ -160,7 +160,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: hansfischer
+          username: guidedtraffic
           password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Generate metadata
@@ -445,7 +445,7 @@ jobs:
       - name: Log in to Docker Hub for security scanning
         uses: docker/login-action@v3
         with:
-          username: hansfischer
+          username: guidedtraffic
           password: ${{ secrets.DOCKERHUB_PAT }}
 
       - name: Parse image configuration

@@ -6,7 +6,7 @@ category:
   - networking
   - debug
   - regular build
-registry: hansfischer
+registry: guidedtraffic
 maintainer: Hans Fischer
 platforms:
   - linux/amd64

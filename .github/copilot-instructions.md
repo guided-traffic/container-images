@@ -52,10 +52,10 @@ git push
 This YAML file drives build configuration and metadata:
 
 ```yaml
-name: etcd-client                    # Container name (becomes hansfischer/etcd-client)
+name: etcd-client                    # Container name (becomes guidedtraffic/etcd-client)
 version: 3.5.21                      # Version tag (use upstream version)
 description: "Short description"     # OCI image description
-registry: hansfischer                # Docker Hub username
+registry: guidedtraffic                # Docker Hub username
 maintainer: Hans Fischer             # Image maintainer
 platforms:                           # Multi-arch builds
   - linux/amd64
@@ -123,10 +123,10 @@ LABEL org.opencontainers.image.title="My Image" \
 
 ### Tagging Strategy
 ```
-hansfischer/etcd-client:3.5.21    # Version from image.yml
-hansfischer/etcd-client:latest    # Only on main branch
-hansfischer/etcd-client:develop   # On develop branch
-hansfischer/etcd-client:pr-42     # On pull requests
+guidedtraffic/etcd-client:3.5.21    # Version from image.yml
+guidedtraffic/etcd-client:latest    # Only on main branch
+guidedtraffic/etcd-client:develop   # On develop branch
+guidedtraffic/etcd-client:pr-42     # On pull requests
 ```
 
 ## Security & Supply Chain
@@ -136,8 +136,8 @@ hansfischer/etcd-client:pr-42     # On pull requests
 - **SBOM artifacts** uploaded as workflow artifacts (30-day retention)
 - **Cosign signatures** verifiable via:
   ```bash
-  cosign verify hansfischer/etcd-client@sha256:...
-  cosign verify-attestation hansfischer/etcd-client@sha256:...
+  cosign verify guidedtraffic/etcd-client@sha256:...
+  cosign verify-attestation guidedtraffic/etcd-client@sha256:...
   ```
 - **SLSA provenance** for build integrity verification
 
@@ -173,7 +173,7 @@ cd etcd-client/
 docker buildx build --platform linux/amd64,linux/arm64 \
   --build-arg ETCD_VERSION=3.5.21 \
   --build-arg IMAGE_VERSION=3.5.21 \
-  -t hansfischer/etcd-client:test .
+  -t guidedtraffic/etcd-client:test .
 ```
 
 ### Trigger specific image rebuild
