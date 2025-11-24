@@ -31,8 +31,9 @@
       "enabled": true
     }
   ],
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "description": "Update versions in image.yml files using inline renovate comments",
       "fileMatch": ["(^|/)image\\.ya?ml$"],
       "matchStrings": [
@@ -42,6 +43,7 @@
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}"
     },
     {
+      "customType": "regex",
       "description": "Update kubectl patch versions in additional_versions.yml",
       "fileMatch": ["^kubectl/additional_versions\\.ya?ml$"],
       "matchStrings": [
@@ -50,7 +52,7 @@
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}loose{{/if}}",
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
       "currentValueTemplate": "{{minor}}.{{currentValue}}",
-      "autoReplaceStringTemplate": "\"{{newPatch}}\""
+      "autoReplaceStringTemplate": "patch: \"{{replace '^(\\d+\\.\\d+\\.)' '' newValue}}\""
     }
   ]
 }
