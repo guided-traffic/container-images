@@ -72,15 +72,15 @@
     },
     {
       "customType": "regex",
-      "description": "Update kubectl patch versions in additional_versions.yml",
+      "description": "Update kubectl patch versions in additional_versions.yml - constrains to same minor version",
       "fileMatch": [
         "^kubectl/additional_versions\\.ya?ml$"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+)\\.\\d+\""
       ],
       "versioningTemplate": "loose",
-      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
+      "extractVersionTemplate": "^v?(?<version>{{currentValue}}\\.\\d+)$",
       "depNameTemplate": "{{{depName}}}",
       "datasourceTemplate": "{{{datasource}}}"
     }
