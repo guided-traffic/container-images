@@ -1,4 +1,4 @@
-FROM debian:13.1-slim
+FROM debian:12-slim
 
 # Build arguments for Thanos version
 ARG THANOS_VERSION=0.40.0
