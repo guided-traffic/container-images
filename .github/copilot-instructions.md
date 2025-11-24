@@ -56,7 +56,7 @@ name: etcd-client                    # Container name (becomes guidedtraffic/etc
 version: 3.5.21                      # Version tag (use upstream version)
 description: "Short description"     # OCI image description
 registry: guidedtraffic                # Docker Hub username
-maintainer: Hans Fischer             # Image maintainer
+maintainer: guided-traffic.com             # Image maintainer
 platforms:                           # Multi-arch builds
   - linux/amd64
   - linux/arm64

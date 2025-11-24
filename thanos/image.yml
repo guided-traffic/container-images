@@ -6,7 +6,7 @@ category:
   - thanos
   - regular build
 registry: guidedtraffic
-maintainer: Hans Fischer
+maintainer: guided-traffic.com
 platforms:
   - linux/amd64
   - linux/arm64

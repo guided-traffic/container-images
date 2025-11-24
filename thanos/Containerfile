@@ -44,7 +44,7 @@ EXPOSE 10901 10902 10903 10904 19291
 LABEL org.opencontainers.image.title="Thanos" \
       org.opencontainers.image.description="Thanos is a minimal debian container with Thanos binary" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
-      org.opencontainers.image.vendor="Hans Fischer" \
+      org.opencontainers.image.vendor="guided-traffic.com" \
       org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
 
 # Default command

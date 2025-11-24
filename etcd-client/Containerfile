@@ -7,7 +7,7 @@ ARG IMAGE_VERSION
 ARG TARGETARCH
 
 # Set labels for container metadata
-LABEL maintainer="Hans Fischer"
+LABEL maintainer="guided-traffic.com"
 LABEL description="Ubuntu minimal container with etcd client v${ETCD_VERSION}"
 LABEL version="${IMAGE_VERSION}"
 LABEL etcd.version="${ETCD_VERSION}"
