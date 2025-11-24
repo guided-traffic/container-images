@@ -45,11 +45,12 @@
       "description": "Update kubectl patch versions in additional_versions.yml",
       "fileMatch": ["^kubectl/additional_versions\\.ya?ml$"],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*-\\s*minor:\\s*\"(?<currentMinor>\\d+\\.\\d+)\"\\s*\\n\\s*patch:\\s*\"(?<currentValue>\\d+)\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- minor: \"(?<minor>\\d+\\.\\d+)\"\\s*\\n\\s*patch: \"(?<currentValue>\\d+)\""
       ],
-      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}loose{{/if}}",
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
-      "currentValueTemplate": "{{{currentMinor}}}.{{{currentValue}}}"
+      "currentValueTemplate": "{{minor}}.{{currentValue}}",
+      "autoReplaceStringTemplate": "\"{{newPatch}}\""
     }
   ]
 }
