@@ -1,4 +1,4 @@
-name: thanos
+name: thanos  #source: https://github.com/thanos-io/thanos
 version: 0.40.1
 description: Thanos is a minimal debian container with Thanos binary
 category:
