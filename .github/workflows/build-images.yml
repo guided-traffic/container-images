@@ -283,101 +283,101 @@ jobs:
           subject-name: ${{ steps.config.outputs.full-name }}
           subject-digest: ${{ steps.build.outputs.digest }}
 
-      - name: Set Docker Hub repository to public
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE_NAME="${{ steps.config.outputs.name }}"
-          REGISTRY_USER="${{ steps.config.outputs.registry }}"
+      # - name: Set Docker Hub repository to public
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     IMAGE_NAME="${{ steps.config.outputs.name }}"
+      #     REGISTRY_USER="${{ steps.config.outputs.registry }}"
 
-          echo "Setting repository ${REGISTRY_USER}/${IMAGE_NAME} to public..."
+      #     echo "Setting repository ${REGISTRY_USER}/${IMAGE_NAME} to public..."
 
-          # Get Docker Hub API token
-          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+      #     # Get Docker Hub API token
+      #     HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
 
-          if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
-            echo "❌ Failed to authenticate with Docker Hub API"
-            exit 1
-          fi
+      #     if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
+      #       echo "❌ Failed to authenticate with Docker Hub API"
+      #       exit 1
+      #     fi
 
-          # Set repository visibility to public
-          RESPONSE=$(curl -s -X PATCH \
-            -H "Authorization: JWT ${HUB_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"is_private": false}' \
-            "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+      #     # Set repository visibility to public
+      #     RESPONSE=$(curl -s -X PATCH \
+      #       -H "Authorization: JWT ${HUB_TOKEN}" \
+      #       -H "Content-Type: application/json" \
+      #       -d '{"is_private": false}' \
+      #       "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
 
-          if echo "$RESPONSE" | jq -e '.is_private == false' > /dev/null; then
-            echo "✅ Repository ${REGISTRY_USER}/${IMAGE_NAME} successfully set to public"
-          else
-            echo "⚠️ Could not verify repository visibility change"
-            echo "Response: $RESPONSE"
-          fi
+      #     if echo "$RESPONSE" | jq -e '.is_private == false' > /dev/null; then
+      #       echo "✅ Repository ${REGISTRY_USER}/${IMAGE_NAME} successfully set to public"
+      #     else
+      #       echo "⚠️ Could not verify repository visibility change"
+      #       echo "Response: $RESPONSE"
+      #     fi
 
-      - name: Update Docker Hub repository metadata
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE_NAME="${{ steps.config.outputs.name }}"
-          REGISTRY_USER="${{ steps.config.outputs.registry }}"
-          DESCRIPTION="${{ steps.config.outputs.description }}"
-          CATEGORIES="${{ steps.config.outputs.categories }}"
+      # - name: Update Docker Hub repository metadata
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     IMAGE_NAME="${{ steps.config.outputs.name }}"
+      #     REGISTRY_USER="${{ steps.config.outputs.registry }}"
+      #     DESCRIPTION="${{ steps.config.outputs.description }}"
+      #     CATEGORIES="${{ steps.config.outputs.categories }}"
 
-          echo "Updating metadata for ${REGISTRY_USER}/${IMAGE_NAME}..."
-          echo "Description: ${DESCRIPTION}"
-          echo "Categories: ${CATEGORIES}"
+      #     echo "Updating metadata for ${REGISTRY_USER}/${IMAGE_NAME}..."
+      #     echo "Description: ${DESCRIPTION}"
+      #     echo "Categories: ${CATEGORIES}"
 
-          # Get Docker Hub API token
-          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+      #     # Get Docker Hub API token
+      #     HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'"${REGISTRY_USER}"'", "password": "'"${{ secrets.DOCKERHUB_PAT }}"'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
 
-          if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
-            echo "❌ Failed to authenticate with Docker Hub API"
-            exit 1
-          fi
+      #     if [ "$HUB_TOKEN" = "null" ] || [ -z "$HUB_TOKEN" ]; then
+      #       echo "❌ Failed to authenticate with Docker Hub API"
+      #       exit 1
+      #     fi
 
-          # Update repository description and overview
-          # Docker Hub API expects full_description (README) and description (short description)
-          UPDATE_PAYLOAD=$(jq -n \
-            --arg desc "$DESCRIPTION" \
-            --arg full_desc "$DESCRIPTION" \
-            '{description: $desc, full_description: $full_desc}')
+      #     # Update repository description and overview
+      #     # Docker Hub API expects full_description (README) and description (short description)
+      #     UPDATE_PAYLOAD=$(jq -n \
+      #       --arg desc "$DESCRIPTION" \
+      #       --arg full_desc "$DESCRIPTION" \
+      #       '{description: $desc, full_description: $full_desc}')
 
-          RESPONSE=$(curl -s -X PATCH \
-            -H "Authorization: JWT ${HUB_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "$UPDATE_PAYLOAD" \
-            "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+      #     RESPONSE=$(curl -s -X PATCH \
+      #       -H "Authorization: JWT ${HUB_TOKEN}" \
+      #       -H "Content-Type: application/json" \
+      #       -d "$UPDATE_PAYLOAD" \
+      #       "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
 
-          if echo "$RESPONSE" | jq -e '.description' > /dev/null 2>&1; then
-            echo "✅ Successfully updated repository description"
-          else
-            echo "⚠️ Could not verify description update"
-            echo "Response: $RESPONSE"
-          fi
+      #     if echo "$RESPONSE" | jq -e '.description' > /dev/null 2>&1; then
+      #       echo "✅ Successfully updated repository description"
+      #     else
+      #       echo "⚠️ Could not verify description update"
+      #       echo "Response: $RESPONSE"
+      #     fi
 
-          # Update categories if available
-          if [ -n "$CATEGORIES" ]; then
-            # Convert comma-separated categories to JSON array
-            CATEGORIES_JSON=$(echo "$CATEGORIES" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$"; ""))')
+      #     # Update categories if available
+      #     if [ -n "$CATEGORIES" ]; then
+      #       # Convert comma-separated categories to JSON array
+      #       CATEGORIES_JSON=$(echo "$CATEGORIES" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$"; ""))')
 
-            # Update categories using the categories API endpoint
-            CATEGORIES_PAYLOAD=$(jq -n --argjson cats "$CATEGORIES_JSON" '{categories: $cats}')
+      #       # Update categories using the categories API endpoint
+      #       CATEGORIES_PAYLOAD=$(jq -n --argjson cats "$CATEGORIES_JSON" '{categories: $cats}')
 
-            echo "Updating categories with: $CATEGORIES_PAYLOAD"
+      #       echo "Updating categories with: $CATEGORIES_PAYLOAD"
 
-            CATEGORIES_RESPONSE=$(curl -s -X PATCH \
-              -H "Authorization: JWT ${HUB_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "$CATEGORIES_PAYLOAD" \
-              "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
+      #       CATEGORIES_RESPONSE=$(curl -s -X PATCH \
+      #         -H "Authorization: JWT ${HUB_TOKEN}" \
+      #         -H "Content-Type: application/json" \
+      #         -d "$CATEGORIES_PAYLOAD" \
+      #         "https://hub.docker.com/v2/repositories/${REGISTRY_USER}/${IMAGE_NAME}/")
 
-            if echo "$CATEGORIES_RESPONSE" | jq -e '.categories' > /dev/null 2>&1; then
-              echo "✅ Successfully updated repository categories"
-            else
-              echo "⚠️ Could not verify categories update (this may not be supported by Docker Hub API)"
-              echo "Response: $CATEGORIES_RESPONSE"
-            fi
-          fi
+      #       if echo "$CATEGORIES_RESPONSE" | jq -e '.categories' > /dev/null 2>&1; then
+      #         echo "✅ Successfully updated repository categories"
+      #       else
+      #         echo "⚠️ Could not verify categories update (this may not be supported by Docker Hub API)"
+      #         echo "Response: $CATEGORIES_RESPONSE"
+      #       fi
+      #     fi
 
-          echo "✅ Docker Hub metadata update completed"
+      #     echo "✅ Docker Hub metadata update completed"
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
