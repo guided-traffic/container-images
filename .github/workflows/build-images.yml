@@ -511,7 +511,7 @@ jobs:
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sbom-${{ matrix.image-dir }}-${{ steps.config.outputs.version }}
           path: |
