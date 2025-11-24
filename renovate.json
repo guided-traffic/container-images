@@ -14,13 +14,19 @@
   "labels": ["dependencies", "renovate"],
   "assignees": ["hans-fischer"],
   "reviewers": [],
-  "enabledManagers": ["dockerfile", "regex"],
   "packageRules": [
     {
       "description": "Group all container image updates together",
       "matchFileNames": ["**/image.yml"],
       "groupName": "container-images",
       "addLabels": ["container-updates"]
+    },
+    {
+      "description": "Separate kubectl additional versions updates (do not group)",
+      "matchFileNames": ["kubectl/additional_versions.yml"],
+      "groupName": "kubectl-versions",
+      "addLabels": ["kubectl", "container-updates"],
+      "separateMinorPatch": true
     },
     {
       "description": "Pin Debian to version 12 (unapproved by Docker Scout)",
@@ -51,8 +57,7 @@
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}loose{{/if}}",
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
-      "currentValueTemplate": "{{minor}}.{{currentValue}}",
-      "autoReplaceStringTemplate": "patch: \"{{replace '^(\\d+\\.\\d+\\.)' '' newValue}}\""
+      "currentValueTemplate": "{{minor}}.{{currentValue}}"
     }
   ]
 }
