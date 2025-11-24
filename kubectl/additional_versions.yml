@@ -6,15 +6,15 @@
 # This file lists OLDER versions that should also be built to support multiple
 # Kubernetes minor versions (as per Kubernetes version skew policy).
 #
+# Each version entry is automatically updated by Renovate to the latest patch release.
+#
 # Tags generated:
 #   - From image.yml: kubectl:1.34.0, kubectl:1.34, kubectl:latest
-#   - From this file:  kubectl:1.33.2, kubectl:1.33 (NO latest tag)
-#                     kubectl:1.32.2, kubectl:1.32 (NO latest tag)
+#   - From this file: kubectl:1.33.6, kubectl:1.33 (NO latest tag)
+#                     kubectl:1.32.10, kubectl:1.32 (NO latest tag)
 
 versions:
   # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
-  - minor: "1.33"
-    patch: "2"      # Renovate updates automatically
+  - version: "1.33.2"
   # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
-  - minor: "1.32"
-    patch: "2"      # Renovate updates automatically
+  - version: "1.32.2"

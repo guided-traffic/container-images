@@ -77,10 +77,10 @@
         "^kubectl/additional_versions\\.ya?ml$"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- minor: \"(?<minor>\\d+\\.\\d+)\"\\s*\\n\\s*patch: \"(?<currentValue>\\d+)\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "versioningTemplate": "loose",
-      "extractVersionTemplate": "^v?{{{minor}}}\\.(?<version>\\d+)$",
+      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
       "depNameTemplate": "{{{depName}}}",
       "datasourceTemplate": "{{{datasource}}}"
     }

@@ -101,33 +101,23 @@ jobs:
 
                 # Parse additional versions using yq or grep
                 if command -v yq >/dev/null 2>&1; then
-                  # Use yq to parse versions array and combine minor + patch
+                  # Use yq to parse versions array directly
                   num_versions=$(yq e '.versions | length' "${dir}additional_versions.yml")
                   for ((i=0; i<num_versions; i++)); do
-                    minor=$(yq e ".versions[$i].minor" "${dir}additional_versions.yml")
-                    patch=$(yq e ".versions[$i].patch" "${dir}additional_versions.yml")
-                    if [[ -n "$minor" && -n "$patch" ]]; then
-                      version="${minor}.${patch}"
+                    version=$(yq e ".versions[$i].version" "${dir}additional_versions.yml")
+                    if [[ -n "$version" ]]; then
                       echo "  Adding additional version: $version"
                       matrix_entries+=("{\"image-dir\":\"$dir_name\",\"image-name\":\"$image_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
                     fi
                   done
                 else
-                  # Fallback: simple grep parsing to extract minor and patch
-                  minor=""
-                  patch=""
+                  # Fallback: simple grep parsing to extract version
                   while IFS= read -r line; do
-                    if [[ "$line" =~ minor:[[:space:]]*\"?([0-9.]+)\"? ]]; then
-                      minor="${BASH_REMATCH[1]}"
-                    elif [[ "$line" =~ patch:[[:space:]]*\"?([0-9]+)\"? ]]; then
-                      patch="${BASH_REMATCH[1]}"
-                      # When we have both minor and patch, create version
-                      if [[ -n "$minor" && -n "$patch" ]]; then
-                        version="${minor}.${patch}"
+                    if [[ "$line" =~ version:[[:space:]]*\"?([0-9.]+)\"? ]]; then
+                      version="${BASH_REMATCH[1]}"
+                      if [[ -n "$version" ]]; then
                         echo "  Adding additional version: $version"
                         matrix_entries+=("{\"image-dir\":\"$dir_name\",\"image-name\":\"$image_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
-                        minor=""
-                        patch=""
                       fi
                     fi
                   done < "${dir}additional_versions.yml"
