@@ -133,6 +133,9 @@ jobs:
             PLATFORMS=$(yq e '.platforms | join(",")' image.yml)
             # Parse categories as comma-separated string for Docker Hub
             CATEGORIES=$(yq e '.category | join(",")' image.yml)
+            # Parse optional component versions (kubectl, yq, etc.)
+            KUBECTL_VERSION=$(yq e '.kubectl_version // ""' image.yml)
+            YQ_VERSION=$(yq e '.yq_version // ""' image.yml)
           else
             # Fallback parsing without yq - strip inline comments (anything after #)
             NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
@@ -142,6 +145,9 @@ jobs:
             PLATFORMS="linux/amd64,linux/arm64"
             # Parse categories (simple extraction from YAML array)
             CATEGORIES=$(grep -A 10 '^category:' image.yml | grep '  -' | sed 's/  - //' | tr '\n' ',' | sed 's/,$//')
+            # Parse optional component versions
+            KUBECTL_VERSION=$(grep '^kubectl_version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//' || echo "")
+            YQ_VERSION=$(grep '^yq_version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//' || echo "")
           fi
 
           echo "name=$NAME" >> $GITHUB_OUTPUT
@@ -151,6 +157,43 @@ jobs:
           echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
           echo "categories=$CATEGORIES" >> $GITHUB_OUTPUT
           echo "full-name=$REGISTRY/$NAME" >> $GITHUB_OUTPUT
+
+          # Generate build args dynamically from all version fields in image.yml
+          # This allows each image to define its own version parameters
+          BUILD_ARGS="IMAGE_VERSION=${VERSION}"
+
+          # Parse all *_version fields from image.yml and add them as build args
+          if command -v yq >/dev/null 2>&1; then
+            # Use yq to extract all keys ending with _version
+            while IFS= read -r key; do
+              value=$(yq e ".${key}" image.yml)
+              # Convert key to uppercase for build arg (e.g., yq_version -> YQ_VERSION)
+              arg_name=$(echo "$key" | tr '[:lower:]' '[:upper:]')
+              BUILD_ARGS="${BUILD_ARGS}"$'\n'"${arg_name}=${value}"
+            done < <(yq e 'keys | .[] | select(. == "*_version")' image.yml 2>/dev/null || true)
+          else
+            # Fallback: parse all lines ending with _version:
+            while IFS=: read -r key value; do
+              key=$(echo "$key" | xargs)
+              value=$(echo "$value" | xargs | sed 's/#.*//' | tr -d '"')
+              if [[ "$key" == *"_version" ]]; then
+                arg_name=$(echo "$key" | tr '[:lower:]' '[:upper:]')
+                BUILD_ARGS="${BUILD_ARGS}"$'\n'"${arg_name}=${value}"
+              fi
+            done < image.yml
+          fi
+
+          # Also add the main version as {IMAGENAME}_VERSION for compatibility
+          # e.g., ETCD_VERSION, KUBECTL_VERSION, etc.
+          IMAGE_NAME_UPPER=$(echo "$NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          BUILD_ARGS="${BUILD_ARGS}"$'\n'"${IMAGE_NAME_UPPER}_VERSION=${VERSION}"
+
+          # Store build args (escape newlines for GitHub Actions)
+          {
+            echo "build-args<<EOF"
+            echo "$BUILD_ARGS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -192,9 +235,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            ETCD_VERSION=${{ steps.config.outputs.version }}
-            IMAGE_VERSION=${{ steps.config.outputs.version }}
+          build-args: ${{ steps.config.outputs.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: true

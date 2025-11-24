@@ -47,6 +47,28 @@
       "extractVersionTemplate": "^v?(?<version>.*)$"
     },
     {
+      "description": "Update kubectl version in kubectl image.yml",
+      "fileMatch": ["^kubectl/image\\.ya?ml$"],
+      "matchStrings": [
+        "kubectl_version:\\s*(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "kubernetes/kubernetes",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
+      "description": "Update yq version in kubectl image.yml",
+      "fileMatch": ["^kubectl/image\\.ya?ml$"],
+      "matchStrings": [
+        "yq_version:\\s*(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "mikefarah/yq",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
       "description": "Update base image versions in Containerfiles",
       "fileMatch": ["(^|/)Containerfile$"],
       "matchStrings": [
