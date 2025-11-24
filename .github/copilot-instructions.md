@@ -218,3 +218,5 @@ Check workflow run summaries - each build generates:
 - 🔍 Verification commands for manual inspection
 
 For Trivy failures: Review SARIF upload step - security-events write permission required.
+
+DO NOT GIT ADD OR GIT COMMIT!

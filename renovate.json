@@ -61,8 +61,8 @@
     {
       "customType": "regex",
       "description": "Update versions in image.yml files using inline renovate comments",
-      "managerFilePatterns": [
-        "/(^|/)image\\.ya?ml$/"
+      "fileMatch": [
+        "(^|/)image\\.ya?ml$"
       ],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\nversion:\\s*(?<currentValue>\\S+)"
@@ -73,15 +73,16 @@
     {
       "customType": "regex",
       "description": "Update kubectl patch versions in additional_versions.yml",
-      "managerFilePatterns": [
-        "/^kubectl/additional_versions\\.ya?ml$/"
+      "fileMatch": [
+        "^kubectl/additional_versions\\.ya?ml$"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- minor: \"(?<minor>\\d+\\.\\d+)\"\\s*\\n\\s*patch: \"(?<currentValue>\\d+)\""
       ],
-      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}loose{{/if}}",
-      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
-      "currentValueTemplate": "{{minor}}.{{currentValue}}"
+      "versioningTemplate": "loose",
+      "extractVersionTemplate": "^v?{{{minor}}}\\.(?<version>\\d+)$",
+      "depNameTemplate": "{{{depName}}}",
+      "datasourceTemplate": "{{{datasource}}}"
     }
   ]
 }
