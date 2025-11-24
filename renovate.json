@@ -69,6 +69,18 @@
       "extractVersionTemplate": "^v?(?<version>.*)$"
     },
     {
+      "description": "Update kubectl patch versions in additional_versions.yml",
+      "fileMatch": ["^kubectl/additional_versions\\.ya?ml$"],
+      "matchStrings": [
+        "minor:\\s*\"(?<currentMinor>\\d+\\.\\d+)\"\\s*\\n\\s*patch:\\s*\"(?<currentValue>\\d+)\"\\s*#"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "kubernetes/kubernetes",
+      "versioningTemplate": "loose",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "currentValueTemplate": "{{{currentMinor}}}.{{{currentValue}}}"
+    },
+    {
       "description": "Update base image versions in Containerfiles",
       "fileMatch": ["(^|/)Containerfile$"],
       "matchStrings": [

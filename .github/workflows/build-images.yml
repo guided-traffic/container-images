@@ -2,16 +2,18 @@ name: Build Container Images
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ '**' ]  # Run on all branches
     paths:
       - '**/Containerfile'
       - '**/image.yml'
+      - '**/additional_versions.yml'
       - '.github/workflows/build-images.yml'
   pull_request:
     branches: [ main ]
     paths:
       - '**/Containerfile'
       - '**/image.yml'
+      - '**/additional_versions.yml'
   schedule:
     # Run every Sunday at 20:00 UTC (8 PM) to rebuild all images
     - cron: '0 20 * * 0'
@@ -54,8 +56,10 @@ jobs:
         run: |
           echo "Discovering directories with Containerfile and image.yml..."
 
+          # Build matrix as array of objects with: image-dir, version (optional), is-additional (optional)
+          matrix_entries=()
+
           # Find all directories containing both Containerfile and image.yml
-          dirs=()
           for dir in */; do
             if [[ -f "${dir}Containerfile" && -f "${dir}image.yml" ]]; then
               # Remove trailing slash
@@ -63,47 +67,89 @@ jobs:
 
               # Check if specific image is requested
               if [[ -n "${{ github.event.inputs.specific_image }}" ]]; then
-                if [[ "$dir_name" == "${{ github.event.inputs.specific_image }}" ]]; then
-                  dirs+=("$dir_name")
+                if [[ "$dir_name" != "${{ github.event.inputs.specific_image }}" ]]; then
+                  continue
                 fi
               else
                 # Check if files changed in this directory (for non-force builds)
                 # Always rebuild for scheduled runs (weekly rebuild), force rebuild, or workflow dispatch
-                if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] || \
-                   [[ "${{ github.event_name }}" == "schedule" ]] || \
-                   git diff --name-only HEAD~1 HEAD | grep -q "^${dir}" || \
-                   [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-                  dirs+=("$dir_name")
+                if [[ "${{ github.event.inputs.force_rebuild }}" != "true" ]] && \
+                   [[ "${{ github.event_name }}" != "schedule" ]] && \
+                   [[ "${{ github.event_name }}" != "workflow_dispatch" ]] && \
+                   ! git diff --name-only HEAD~1 HEAD | grep -q "^${dir}"; then
+                  continue
+                fi
+              fi
+
+              # Add main image build (from image.yml)
+              matrix_entries+=("{\"image-dir\":\"$dir_name\"}")
+
+              # Check for additional_versions.yml to build older versions
+              if [[ -f "${dir}additional_versions.yml" ]]; then
+                echo "Found additional_versions.yml in $dir_name, parsing versions..."
+
+                # Parse additional versions using yq or grep
+                if command -v yq >/dev/null 2>&1; then
+                  # Use yq to parse versions array and combine minor + patch
+                  num_versions=$(yq e '.versions | length' "${dir}additional_versions.yml")
+                  for ((i=0; i<num_versions; i++)); do
+                    minor=$(yq e ".versions[$i].minor" "${dir}additional_versions.yml")
+                    patch=$(yq e ".versions[$i].patch" "${dir}additional_versions.yml")
+                    if [[ -n "$minor" && -n "$patch" ]]; then
+                      version="${minor}.${patch}"
+                      echo "  Adding additional version: $version"
+                      matrix_entries+=("{\"image-dir\":\"$dir_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
+                    fi
+                  done
+                else
+                  # Fallback: simple grep parsing to extract minor and patch
+                  minor=""
+                  patch=""
+                  while IFS= read -r line; do
+                    if [[ "$line" =~ minor:[[:space:]]*\"?([0-9.]+)\"? ]]; then
+                      minor="${BASH_REMATCH[1]}"
+                    elif [[ "$line" =~ patch:[[:space:]]*\"?([0-9]+)\"? ]]; then
+                      patch="${BASH_REMATCH[1]}"
+                      # When we have both minor and patch, create version
+                      if [[ -n "$minor" && -n "$patch" ]]; then
+                        version="${minor}.${patch}"
+                        echo "  Adding additional version: $version"
+                        matrix_entries+=("{\"image-dir\":\"$dir_name\",\"version\":\"$version\",\"is-additional\":\"true\"}")
+                        minor=""
+                        patch=""
+                      fi
+                    fi
+                  done < "${dir}additional_versions.yml"
                 fi
               fi
             fi
           done
 
           # Convert to JSON array
-          if [ ${#dirs[@]} -eq 0 ]; then
+          if [ ${#matrix_entries[@]} -eq 0 ]; then
             matrix="[]"
           else
-            # Build proper JSON array using jq if available, otherwise manual construction
+            # Build JSON array from matrix entries
             if command -v jq >/dev/null 2>&1; then
-              # Use jq for robust JSON array construction (compact format)
-              matrix=$(printf '%s\n' "${dirs[@]}" | jq -R . | jq -s -c .)
+              # Use jq for robust JSON array construction
+              matrix=$(printf '%s\n' "${matrix_entries[@]}" | jq -s -c .)
             else
               # Fallback to manual construction
               matrix="["
               first=true
-              for dir in "${dirs[@]}"; do
+              for entry in "${matrix_entries[@]}"; do
                 if [ "$first" = true ]; then
                   first=false
                 else
                   matrix+=","
                 fi
-                matrix+="\"$dir\""
+                matrix+="$entry"
               done
               matrix+="]"
             fi
           fi
 
-          echo "Found directories: ${dirs[*]}"
+          echo "Matrix entries: ${#matrix_entries[@]}"
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   build-images:
@@ -113,7 +159,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image-dir: ${{fromJson(needs.discover-images.outputs.matrix)}}
+        include: ${{fromJson(needs.discover-images.outputs.matrix)}}
 
     steps:
       - name: Checkout repository
@@ -148,6 +194,12 @@ jobs:
             # Parse optional component versions
             KUBECTL_VERSION=$(grep '^kubectl_version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//' || echo "")
             YQ_VERSION=$(grep '^yq_version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//' || echo "")
+          fi
+
+          # Override version if this is an additional version build
+          if [[ -n "${{ matrix.version }}" ]]; then
+            echo "Building additional version: ${{ matrix.version }}"
+            VERSION="${{ matrix.version }}"
           fi
 
           echo "name=$NAME" >> $GITHUB_OUTPUT
@@ -206,20 +258,51 @@ jobs:
           username: guidedtraffic
           password: ${{ secrets.DOCKERHUB_PAT }}
 
+      - name: Calculate version tags
+        id: version-tags
+        run: |
+          VERSION="${{ steps.config.outputs.version }}"
+          FULL_NAME="${{ steps.config.outputs.full-name }}"
+          IS_ADDITIONAL="${{ matrix.is-additional }}"
+
+          # Extract minor version (e.g., 1.31.3 -> 1.31)
+          MINOR_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
+
+          # Build tags list
+          TAGS="${FULL_NAME}:${VERSION}"
+          TAGS="${TAGS}"$'\n'"${FULL_NAME}:${MINOR_VERSION}"
+
+          # Add latest tag only for main branch and non-additional versions
+          if [[ "${{ github.ref_name }}" == "main" && "$IS_ADDITIONAL" != "true" ]]; then
+            TAGS="${TAGS}"$'\n'"${FULL_NAME}:latest"
+          fi
+
+          # Add branch tag for non-main branches (only for primary image)
+          if [[ "${{ github.ref_name }}" != "main" && "$IS_ADDITIONAL" != "true" && "${{ github.event_name }}" == "push" ]]; then
+            TAGS="${TAGS}"$'\n'"${FULL_NAME}:${{ github.ref_name }}"
+          fi
+
+          # Add PR tag
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TAGS="${TAGS}"$'\n'"${FULL_NAME}:pr-${{ github.event.pull_request.number }}"
+          fi
+
+          # Output for docker build (newline-separated list)
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+          echo "Generated tags:"
+          echo "$TAGS"
+
       - name: Generate metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.config.outputs.full-name }}
-          tags: |
-            # Version tag
-            type=raw,value=${{ steps.config.outputs.version }}
-            # Latest tag for main branch
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Branch name for non-main branches
-            type=ref,event=branch,enable=${{ github.ref_name != 'main' }}
-            # PR number for pull requests
-            type=ref,event=pr
+          tags: ${{ steps.version-tags.outputs.tags }}
           labels: |
             org.opencontainers.image.title=${{ steps.config.outputs.name }}
             org.opencontainers.image.description=${{ steps.config.outputs.description }}
@@ -232,7 +315,7 @@ jobs:
           context: ${{ matrix.image-dir }}
           file: ${{ matrix.image-dir }}/Containerfile
           platforms: ${{ steps.config.outputs.platforms }}
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.ref_name == 'main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: ${{ steps.config.outputs.build-args }}
@@ -243,17 +326,17 @@ jobs:
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ steps.config.outputs.description }}
 
       - name: Install Cosign
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         uses: sigstore/cosign-installer@v3
         with:
           cosign-release: 'v2.2.2'
 
       - name: Install Syft for SBOM generation
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         uses: anchore/sbom-action/download-syft@v0.15.8
 
       - name: Generate SBOM
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         id: sbom
         env:
           # Ensure Docker credentials are available for private repositories
@@ -288,7 +371,7 @@ jobs:
           echo "✅ SBOM generation completed successfully"
 
       - name: Sign container image with Cosign
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         env:
           COSIGN_EXPERIMENTAL: 1
           # Ensure Docker credentials are available for private repositories
@@ -318,7 +401,7 @@ jobs:
           echo "✅ Successfully signed image and SBOM"
 
       - name: Generate SLSA Provenance
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ${{ steps.config.outputs.full-name }}
@@ -421,10 +504,10 @@ jobs:
       #     echo "✅ Docker Hub metadata update completed"
 
       - name: Upload SBOM artifacts
-        if: github.event_name != 'pull_request'
+        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ matrix.image-dir }}
+          name: sbom-${{ matrix.image-dir }}-${{ steps.config.outputs.version }}
           path: |
             sbom-${{ matrix.image-dir }}.*.json
           retention-days: 30
@@ -441,7 +524,7 @@ jobs:
           echo "**Directory:** \`${{ matrix.image-dir }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "### 🏷️ Generated Tags" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
@@ -464,12 +547,12 @@ jobs:
             echo "cosign verify-attestation ${{ steps.config.outputs.full-name }}@${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Status:** Build only (PR mode, no push)" >> $GITHUB_STEP_SUMMARY
+            echo "**Status:** Build only (not on main branch, no push)" >> $GITHUB_STEP_SUMMARY
           fi
 
   security-scan:
     needs: [discover-images, build-images]
-    if: needs.discover-images.outputs.matrix != '[]' && github.event_name != 'pull_request'
+    if: needs.discover-images.outputs.matrix != '[]' && github.ref_name == 'main'
     runs-on: self-hosted
     permissions:
       contents: read
@@ -477,7 +560,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image-dir: ${{fromJson(needs.discover-images.outputs.matrix)}}
+        include: ${{fromJson(needs.discover-images.outputs.matrix)}}
 
     steps:
       - name: Checkout repository
@@ -497,6 +580,12 @@ jobs:
           NAME=$(grep '^name:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
           VERSION=$(grep '^version:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
           REGISTRY=$(grep '^registry:' image.yml | cut -d' ' -f2- | sed 's/#.*//' | tr -d '" ' | sed 's/[[:space:]]*$//')
+
+          # Override version if this is an additional version build
+          if [[ -n "${{ matrix.version }}" ]]; then
+            VERSION="${{ matrix.version }}"
+          fi
+
           echo "full-name=$REGISTRY/$NAME:$VERSION" >> $GITHUB_OUTPUT
 
       - name: Pull image for security scanning
