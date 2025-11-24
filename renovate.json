@@ -28,19 +28,19 @@
       "description": "Update versions in image.yml files using inline renovate comments",
       "fileMatch": ["(^|/)image\\.ya?ml$"],
       "matchStrings": [
-        "#\\s*renovate:\\s*(?<depNameComment>.*?)\\n[^:]*:\\s*(?<currentValue>.*?)\\s*$"
-      ]
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\nversion:\\s*(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}"
     },
     {
       "description": "Update kubectl patch versions in additional_versions.yml",
       "fileMatch": ["^kubectl/additional_versions\\.ya?ml$"],
       "matchStrings": [
-        "minor:\\s*\"(?<currentMinor>\\d+\\.\\d+)\"\\s*\\n\\s*patch:\\s*\"(?<currentValue>\\d+)\"\\s*#"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*-\\s*minor:\\s*\"(?<currentMinor>\\d+\\.\\d+)\"\\s*\\n\\s*patch:\\s*\"(?<currentValue>\\d+)\""
       ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "kubernetes/kubernetes",
-      "versioningTemplate": "loose",
-      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
       "currentValueTemplate": "{{{currentMinor}}}.{{{currentValue}}}"
     }
   ]
