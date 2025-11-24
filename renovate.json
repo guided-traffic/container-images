@@ -21,6 +21,14 @@
       "matchFileNames": ["**/image.yml"],
       "groupName": "container-images",
       "addLabels": ["container-updates"]
+    },
+    {
+      "description": "Pin Debian to version 12 (unapproved by Docker Scout)",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["debian"],
+      "matchFileNames": ["thanos/Containerfile"],
+      "allowedVersions": "<=12",
+      "enabled": true
     }
   ],
   "regexManagers": [
