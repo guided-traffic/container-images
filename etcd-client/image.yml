@@ -1,5 +1,6 @@
 # Source: https://github.com/etcd-io/etcd
 name: etcd-client
+# renovate: datasource=github-releases depName=etcd-io/etcd versioning=semver extractVersion=^v?(?<version>.*)$
 version: 3.6.6
 description: Ubuntu minimal container with etcd client
 category:

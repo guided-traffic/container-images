@@ -1,3 +1,4 @@
+# renovate: datasource=docker depName=debian versioning=docker
 FROM debian:12-slim
 
 # Build arguments for Thanos version

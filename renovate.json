@@ -14,7 +14,7 @@
   "labels": ["dependencies", "renovate"],
   "assignees": ["hans-fischer"],
   "reviewers": [],
-  "enabledManagers": ["regex"],
+  "enabledManagers": ["dockerfile", "regex"],
   "packageRules": [
     {
       "description": "Group all container image updates together",
@@ -25,48 +25,11 @@
   ],
   "regexManagers": [
     {
-      "description": "Update etcd version in etcd-client image.yml",
-      "fileMatch": ["^etcd-client/image\\.ya?ml$"],
+      "description": "Update versions in image.yml files using inline renovate comments",
+      "fileMatch": ["(^|/)image\\.ya?ml$"],
       "matchStrings": [
-        "name:\\s*etcd-client\\s*\\nversion:\\s*(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "etcd-io/etcd",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
-    },
-    {
-      "description": "Update Thanos version in thanos image.yml",
-      "fileMatch": ["^thanos/image\\.ya?ml$"],
-      "matchStrings": [
-        "name:\\s*thanos\\s*\\nversion:\\s*(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "thanos-io/thanos",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
-    },
-    {
-      "description": "Update kubectl version in kubectl image.yml",
-      "fileMatch": ["^kubectl/image\\.ya?ml$"],
-      "matchStrings": [
-        "kubectl_version:\\s*(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "kubernetes/kubernetes",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
-    },
-    {
-      "description": "Update yq version in kubectl image.yml",
-      "fileMatch": ["^kubectl/image\\.ya?ml$"],
-      "matchStrings": [
-        "yq_version:\\s*(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "mikefarah/yq",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
+        "#\\s*renovate:\\s*(?<depNameComment>.*?)\\n[^:]*:\\s*(?<currentValue>.*?)\\s*$"
+      ]
     },
     {
       "description": "Update kubectl patch versions in additional_versions.yml",
@@ -79,15 +42,6 @@
       "versioningTemplate": "loose",
       "extractVersionTemplate": "^v?(?<version>.*)$",
       "currentValueTemplate": "{{{currentMinor}}}.{{{currentValue}}}"
-    },
-    {
-      "description": "Update base image versions in Containerfiles",
-      "fileMatch": ["(^|/)Containerfile$"],
-      "matchStrings": [
-        "FROM\\s+(?<depName>ubuntu):(?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "docker"
     }
   ]
 }

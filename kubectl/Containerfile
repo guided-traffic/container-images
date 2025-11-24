@@ -1,4 +1,5 @@
 # Ubuntu minimal base image with latest patches, kubectl and yq
+# renovate: datasource=docker depName=ubuntu versioning=docker
 FROM ubuntu:24.04
 
 # Build arguments (kubectl version from image.yml version field, yq from yq_version field)

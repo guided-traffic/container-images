@@ -19,7 +19,9 @@
 #     2. Update this file to remove 1.29 and add 1.31
 
 versions:
+  # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
   - minor: "1.33"
     patch: "2"      # Renovate updates automatically
+  # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
   - minor: "1.32"
     patch: "2"      # Renovate updates automatically
