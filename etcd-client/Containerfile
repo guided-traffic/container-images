@@ -45,8 +45,17 @@ RUN echo "Installing etcd version: ${ETCD_VER}" && \
 # Verify etcd client installation
 RUN etcdctl version && etcd --version
 
+# Create non-root user for security
+RUN groupadd -r etcduser && useradd -r -g etcduser etcduser
+
 # Set working directory
 WORKDIR /app
+
+# Change ownership of working directory
+RUN chown -R etcduser:etcduser /app
+
+# Switch to non-root user
+USER etcduser
 
 # Default shell
 SHELL ["/bin/bash", "-c"]
