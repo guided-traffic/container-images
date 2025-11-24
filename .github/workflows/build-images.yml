@@ -2,7 +2,7 @@ name: Build Container Images
 
 on:
   push:
-    branches: [ '**' ]  # Run on all branches
+    branches: [ main ]  # Only run on main branch
     paths:
       - '**/Containerfile'
       - '**/image.yml'
@@ -315,7 +315,7 @@ jobs:
           context: ${{ matrix.image-dir }}
           file: ${{ matrix.image-dir }}/Containerfile
           platforms: ${{ steps.config.outputs.platforms }}
-          push: ${{ github.ref_name == 'main' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: ${{ steps.config.outputs.build-args }}
@@ -326,17 +326,17 @@ jobs:
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ steps.config.outputs.description }}
 
       - name: Install Cosign
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3
         with:
           cosign-release: 'v2.2.2'
 
       - name: Install Syft for SBOM generation
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         uses: anchore/sbom-action/download-syft@v0.15.8
 
       - name: Generate SBOM
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         id: sbom
         env:
           # Ensure Docker credentials are available for private repositories
@@ -371,7 +371,7 @@ jobs:
           echo "✅ SBOM generation completed successfully"
 
       - name: Sign container image with Cosign
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         env:
           COSIGN_EXPERIMENTAL: 1
           # Ensure Docker credentials are available for private repositories
@@ -401,7 +401,7 @@ jobs:
           echo "✅ Successfully signed image and SBOM"
 
       - name: Generate SLSA Provenance
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ${{ steps.config.outputs.full-name }}
@@ -504,7 +504,7 @@ jobs:
       #     echo "✅ Docker Hub metadata update completed"
 
       - name: Upload SBOM artifacts
-        if: github.ref_name == 'main'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ matrix.image-dir }}-${{ steps.config.outputs.version }}
@@ -524,7 +524,7 @@ jobs:
           echo "**Directory:** \`${{ matrix.image-dir }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "### 🏷️ Generated Tags" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
@@ -547,12 +547,12 @@ jobs:
             echo "cosign verify-attestation ${{ steps.config.outputs.full-name }}@${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Status:** Build only (not on main branch, no push)" >> $GITHUB_STEP_SUMMARY
+            echo "**Status:** Build only (PR mode, no push)" >> $GITHUB_STEP_SUMMARY
           fi
 
   security-scan:
     needs: [discover-images, build-images]
-    if: needs.discover-images.outputs.matrix != '[]' && github.ref_name == 'main'
+    if: needs.discover-images.outputs.matrix != '[]' && github.event_name != 'pull_request'
     runs-on: self-hosted
     permissions:
       contents: read
