@@ -309,17 +309,6 @@ jobs:
           echo "Generated tags:"
           echo "$TAGS"
 
-      - name: Generate metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.config.outputs.full-name }}
-          tags: ${{ steps.version-tags.outputs.tags }}
-          labels: |
-            org.opencontainers.image.title=${{ steps.config.outputs.name }}
-            org.opencontainers.image.description=${{ steps.config.outputs.description }}
-            org.opencontainers.image.version=${{ steps.config.outputs.version }}
-
       - name: Build and push container image
         id: build
         uses: docker/build-push-action@v5
@@ -328,8 +317,13 @@ jobs:
           file: ${{ matrix.image-dir }}/Containerfile
           platforms: ${{ steps.config.outputs.platforms }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.version-tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=${{ steps.config.outputs.name }}
+            org.opencontainers.image.description=${{ steps.config.outputs.description }}
+            org.opencontainers.image.version=${{ steps.config.outputs.version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
           build-args: ${{ steps.config.outputs.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -539,7 +533,7 @@ jobs:
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
             echo "### 🏷️ Generated Tags" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.version-tags.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
 
             echo "" >> $GITHUB_STEP_SUMMARY
