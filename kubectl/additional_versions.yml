@@ -14,7 +14,7 @@
 versions:
   # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
   - minor: "1.33"
-    patch: "2"      # Renovate updates automatically
+    patch: "6"      # Renovate updates automatically
   # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose extractVersion=^v?(?<version>.*)$
   - minor: "1.32"
     patch: "2"      # Renovate updates automatically
