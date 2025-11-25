@@ -55,6 +55,7 @@ RUN apt-get update && \
     iperf3 \
     # Network mapping and scanning
     nmap \
+    tcptraceroute \
     # SNMP tools
     snmp \
     # Network utilities
@@ -76,11 +77,6 @@ RUN apt-get update && \
     jq \
     # OpenSSL
     openssl \
-    # Python and tools
-    python3 \
-    python3-pip \
-    python3-setuptools \
-    python3-scapy \
     # SSH
     openssh-client \
     openssh-server \
@@ -95,56 +91,5 @@ RUN apt-get update && \
     # Remove SSH host keys to prevent them from being baked into the image
     # Keys should be generated at runtime if SSH server is needed
     && rm -f /etc/ssh/ssh_host_*
-
-# Install oh-my-zsh
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-# Upgrade pip to latest version (ignore-installed to work with Debian-managed pip)
-RUN pip3 install --upgrade --no-cache-dir --ignore-installed pip --break-system-packages
-
-# Install speedtest-cli via pip (always install latest version)
-RUN pip3 install --upgrade --no-cache-dir speedtest-cli --break-system-packages
-
-# Install additional network tools from Ubuntu repos
-RUN apt-get update && \
-    apt-get install -y tcptraceroute && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# renovate: datasource=github-releases depName=vi/websocat
-ARG WEBSOCAT_VERSION=1.13.0
-
-# Install websocat from GitHub releases
-RUN ARCH=$(dpkg --print-architecture) && \
-    if [ "$ARCH" = "amd64" ]; then \
-        WEBSOCAT_ARCH="x86_64"; \
-    elif [ "$ARCH" = "arm64" ]; then \
-        WEBSOCAT_ARCH="aarch64"; \
-    else \
-        echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi && \
-    curl -L "https://github.com/vi/websocat/releases/download/v${WEBSOCAT_VERSION}/websocat.${WEBSOCAT_ARCH}-unknown-linux-musl" -o /usr/local/bin/websocat && \
-    chmod +x /usr/local/bin/websocat
-
-# renovate: datasource=github-releases depName=fujiapple852/trippy
-ARG TRIPPY_VERSION=0.11.0
-
-# Install trippy from GitHub releases
-RUN ARCH=$(dpkg --print-architecture) && \
-    if [ "$ARCH" = "amd64" ]; then \
-        TRIPPY_ARCH="x86_64"; \
-    elif [ "$ARCH" = "arm64" ]; then \
-        TRIPPY_ARCH="aarch64"; \
-    else \
-        echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi && \
-    curl -L "https://github.com/fujiapple852/trippy/releases/download/${TRIPPY_VERSION}/trippy-${TRIPPY_VERSION}-${TRIPPY_ARCH}-unknown-linux-gnu.tar.gz" -o /tmp/trippy.tar.gz && \
-    tar -xzf /tmp/trippy.tar.gz -C /tmp/ && \
-    cp /tmp/trippy-${TRIPPY_VERSION}-${TRIPPY_ARCH}-unknown-linux-gnu/trip /usr/local/bin/trip && \
-    rm -rf /tmp/trippy* && \
-    chmod +x /usr/local/bin/trip
-
-# Set zsh as default shell
-RUN chsh -s $(which zsh)
 
 CMD ["sleep", "infinity"]
