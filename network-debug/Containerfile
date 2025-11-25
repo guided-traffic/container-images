@@ -91,13 +91,19 @@ RUN apt-get update && \
     swaks \
     # Clean up package cache to reduce image size
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # Remove SSH host keys to prevent them from being baked into the image
+    # Keys should be generated at runtime if SSH server is needed
+    && rm -f /etc/ssh/ssh_host_*
 
 # Install oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-# Install speedtest-cli via pip
-RUN pip3 install --no-cache-dir speedtest-cli --break-system-packages
+# Upgrade pip to latest version (ignore-installed to work with Debian-managed pip)
+RUN pip3 install --upgrade --no-cache-dir --ignore-installed pip --break-system-packages
+
+# Install speedtest-cli via pip (always install latest version)
+RUN pip3 install --upgrade --no-cache-dir speedtest-cli --break-system-packages
 
 # Install additional network tools from Ubuntu repos
 RUN apt-get update && \
