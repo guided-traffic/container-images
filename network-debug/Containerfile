@@ -5,91 +5,33 @@ FROM ubuntu:24.04
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y \
-    # Web and HTTP tools
-    apache2-utils \
-    curl \
-    httpie \
-    wget \
-    # Shell and scripting
-    bash \
-    zsh \
+    # Basic shell and utilities
     git \
-    vim \
-    # DNS and network discovery
-    bind9-dnsutils \
-    dnsutils \
-    ldnsutils \
-    # Routing and BGP
-    bird2 \
-    # Network bridging and interfaces
-    bridge-utils \
-    net-tools \
-    iproute2 \
-    ethtool \
-    iw \
-    wireless-tools \
-    # Connection tracking and filtering
-    conntrack \
-    ipset \
-    iptables \
-    nftables \
-    ipvsadm \
-    # DHCP tools
-    dhcping \
-    # Ping and connectivity tools
-    iputils-ping \
-    fping \
-    # Monitoring and analysis
-    iftop \
-    iptraf-ng \
-    mtr \
-    ngrep \
-    tcpdump \
-    tshark \
-    strace \
-    ltrace \
+    ntp \
+    iptraf \
     sysstat \
+    dkms \
+    wget \
+    curl \
     htop \
-    # Performance testing
-    iperf \
-    iperf3 \
-    # Network mapping and scanning
-    nmap \
-    tcptraceroute \
-    # SNMP tools
-    snmp \
-    # Network utilities
-    netcat-openbsd \
-    socat \
-    telnet \
-    traceroute \
-    # System utilities
-    file \
-    util-linux \
     ca-certificates \
+    sed \
+    net-tools \
+    iw \
+    iproute2 \
+    wireless-tools \
+    aptitude \
+    vim \
+    dnsutils \
+    screen \
+    telnet \
+    iputils-ping \
+    tcpdump \
+    traceroute \
     gnupg \
     lsb-release \
-    sed \
-    screen \
-    aptitude \
-    dkms \
-    # JSON processing
-    jq \
-    # OpenSSL
-    openssl \
-    # SSH
-    openssh-client \
-    openssh-server \
-    # Perl modules for SMTP
-    libnet-ssleay-perl \
-    libcrypt-ssleay-perl \
-    # Mail testing
-    swaks \
     # Clean up package cache to reduce image size
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    # Remove SSH host keys to prevent them from being baked into the image
-    # Keys should be generated at runtime if SSH server is needed
-    && rm -f /etc/ssh/ssh_host_*
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["sleep", "infinity"]
