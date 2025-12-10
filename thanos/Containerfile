@@ -1,9 +1,8 @@
 # renovate: datasource=docker depName=debian versioning=docker
 FROM debian:12-slim
 
-# Build arguments for Thanos version
-ARG THANOS_VERSION=0.40.0
-ARG IMAGE_VERSION=0.40.0
+# Build argument for Thanos version (passed from image.yml version)
+ARG IMAGE_VERSION
 
 # Update package lists and install security updates
 RUN apt-get update && \
@@ -20,9 +19,9 @@ RUN apt-get update && \
 RUN ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "amd64" ]; then ARCH="amd64"; fi && \
     if [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi && \
-    curl -L -o /tmp/thanos.tar.gz "https://github.com/thanos-io/thanos/releases/download/v${THANOS_VERSION}/thanos-${THANOS_VERSION}.linux-${ARCH}.tar.gz" && \
+    curl -L -o /tmp/thanos.tar.gz "https://github.com/thanos-io/thanos/releases/download/v${IMAGE_VERSION}/thanos-${IMAGE_VERSION}.linux-${ARCH}.tar.gz" && \
     tar -xzf /tmp/thanos.tar.gz -C /tmp && \
-    mv /tmp/thanos-${THANOS_VERSION}.linux-${ARCH}/thanos /usr/local/bin/thanos && \
+    mv /tmp/thanos-${IMAGE_VERSION}.linux-${ARCH}/thanos /usr/local/bin/thanos && \
     chmod +x /usr/local/bin/thanos && \
     rm -rf /tmp/thanos*
 
