@@ -1,5 +1,5 @@
 # renovate: datasource=docker depName=debian versioning=docker
-FROM debian:12.8-slim
+FROM debian:12.12-slim
 
 # Build argument for Thanos version (passed from image.yml version)
 ARG IMAGE_VERSION
