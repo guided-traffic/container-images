@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "docker:enableMajor"
   ],
   "timezone": "Europe/Berlin",
   "prConcurrentLimit": 5,
@@ -22,6 +23,12 @@
   "platformAutomerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
+  "docker": {
+    "fileMatch": [
+      "(^|/)Containerfile$",
+      "(^|/)Dockerfile$"
+    ]
+  },
   "packageRules": [
     {
       "description": "Auto-merge only patch updates (e.g., 1.2.3 -> 1.2.4)",
