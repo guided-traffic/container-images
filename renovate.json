@@ -25,15 +25,6 @@
   "automergeStrategy": "squash",
   "packageRules": [
     {
-      "matchCategories": [
-        "docker"
-      ],
-      "managerFilePatterns": [
-        "/(^|/)Containerfile$/",
-        "/(^|/)Dockerfile$/"
-      ]
-    },
-    {
       "description": "Auto-merge only patch updates (e.g., 1.2.3 -> 1.2.4)",
       "matchUpdateTypes": [
         "patch"
