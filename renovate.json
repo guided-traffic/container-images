@@ -50,16 +50,31 @@
       ]
     },
     {
-      "description": "kubectl additional_versions.yml - only patch updates allowed to stay on same minor version",
+      "description": "kubectl-1.34 - only allow 1.34.x patch updates",
       "matchFileNames": [
         "kubectl/additional_versions.yml"
       ],
+      "matchDepNames": [
+        "kubectl-1.34"
+      ],
+      "allowedVersions": "/^1\\.34\\..+$/",
       "addLabels": [
         "kubectl",
         "container-updates"
+      ]
+    },
+    {
+      "description": "kubectl-1.33 - only allow 1.33.x patch updates",
+      "matchFileNames": [
+        "kubectl/additional_versions.yml"
       ],
-      "matchUpdateTypes": [
-        "patch"
+      "matchDepNames": [
+        "kubectl-1.33"
+      ],
+      "allowedVersions": "/^1\\.33\\..+$/",
+      "addLabels": [
+        "kubectl",
+        "container-updates"
       ]
     },
     {
