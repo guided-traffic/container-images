@@ -54,7 +54,6 @@
       "matchFileNames": [
         "kubectl/additional_versions.yml"
       ],
-      "groupName": "kubectl-versions",
       "addLabels": [
         "kubectl",
         "container-updates"
@@ -98,11 +97,12 @@
         "/^kubectl/additional_versions\\.ya?ml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) packageName=(?<packageName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
-      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
       "depNameTemplate": "{{{depName}}}",
+      "packageNameTemplate": "{{{packageName}}}",
       "datasourceTemplate": "{{{datasource}}}"
     }
   ]
