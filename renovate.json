@@ -50,7 +50,7 @@
       ]
     },
     {
-      "description": "Separate kubectl additional versions updates (do not group)",
+      "description": "kubectl additional_versions.yml - only patch updates allowed to stay on same minor version",
       "matchFileNames": [
         "kubectl/additional_versions.yml"
       ],
@@ -59,7 +59,11 @@
         "kubectl",
         "container-updates"
       ],
-      "separateMinorPatch": true
+      "separateMajorMinor": true,
+      "separateMinorPatch": true,
+      "matchUpdateTypes": [
+        "patch"
+      ]
     },
     {
       "description": "Pin Debian to version 12 (unapproved by Docker Scout)",
@@ -91,15 +95,15 @@
     },
     {
       "customType": "regex",
-      "description": "Update kubectl patch versions in additional_versions.yml - constrains to same minor version",
+      "description": "Update kubectl patch versions in additional_versions.yml",
       "managerFilePatterns": [
         "/^kubectl/additional_versions\\.ya?ml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+)\\.\\d+\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
       ],
-      "versioningTemplate": "loose",
-      "extractVersionTemplate": "^v?(?<version>{{currentValue}}\\.\\d+)$",
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}",
       "depNameTemplate": "{{{depName}}}",
       "datasourceTemplate": "{{{datasource}}}"
     }
