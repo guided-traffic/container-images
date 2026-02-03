@@ -23,13 +23,16 @@
   "platformAutomerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
-  "docker": {
-    "fileMatch": [
-      "(^|/)Containerfile$",
-      "(^|/)Dockerfile$"
-    ]
-  },
   "packageRules": [
+    {
+      "matchCategories": [
+        "docker"
+      ],
+      "managerFilePatterns": [
+        "/(^|/)Containerfile$/",
+        "/(^|/)Dockerfile$/"
+      ]
+    },
     {
       "description": "Auto-merge only patch updates (e.g., 1.2.3 -> 1.2.4)",
       "matchUpdateTypes": [
@@ -86,8 +89,8 @@
     {
       "customType": "regex",
       "description": "Update versions in image.yml files using inline renovate comments",
-      "fileMatch": [
-        "(^|/)image\\.ya?ml$"
+      "managerFilePatterns": [
+        "/(^|/)image\\.ya?ml$/"
       ],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\nversion:\\s*(?<currentValue>\\S+)"
@@ -98,8 +101,8 @@
     {
       "customType": "regex",
       "description": "Update kubectl patch versions in additional_versions.yml - constrains to same minor version",
-      "fileMatch": [
-        "^kubectl/additional_versions\\.ya?ml$"
+      "managerFilePatterns": [
+        "/^kubectl/additional_versions\\.ya?ml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*- version: \"(?<currentValue>\\d+\\.\\d+)\\.\\d+\""
