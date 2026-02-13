@@ -17,4 +17,4 @@ versions:
   # renovate: datasource=github-releases depName=kubectl-1.34 packageName=kubernetes/kubernetes versioning=semver
   - version: "1.34.3"
   # renovate: datasource=github-releases depName=kubectl-1.33 packageName=kubernetes/kubernetes versioning=semver
-  - version: "1.33.7"
+  - version: "1.33.8"
