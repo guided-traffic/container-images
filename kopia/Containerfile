@@ -35,6 +35,10 @@ RUN groupadd -r kopia && useradd -r -g kopia -m kopia
 RUN mkdir -p /app/config /app/cache /app/data /app/logs && \
     chown -R kopia:kopia /app
 
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Switch to non-root user
 USER kopia
 
@@ -51,6 +55,6 @@ LABEL org.opencontainers.image.title="Kopia" \
       org.opencontainers.image.vendor="guided-traffic.com" \
       org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
 
-# Default command
-ENTRYPOINT ["/usr/bin/kopia"]
-CMD ["--help"]
+# Auto-connect to S3 repository on startup using env vars
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["sleep", "infinity"]
