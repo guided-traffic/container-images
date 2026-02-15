@@ -4,16 +4,12 @@ on:
   push:
     branches: [ main ]  # Only run on main branch
     paths:
-      - '**/Containerfile'
-      - '**/image.yml'
-      - '**/additional_versions.yml'
+      - '*/**'
       - '.github/workflows/build-images.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - '**/Containerfile'
-      - '**/image.yml'
-      - '**/additional_versions.yml'
+      - '*/**'
   schedule:
     # Run every Sunday at 20:00 UTC (8 PM) to rebuild all images
     - cron: '0 20 * * 0'
