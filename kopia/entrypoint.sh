@@ -9,8 +9,15 @@ set -e
 # AWS credentials file (from Secret current-aws-credentials, key: credentials):
 #   Mounted at AWS_CREDENTIALS_FILE (default: /etc/aws/credentials)
 #   Format: standard AWS credentials file with [default] profile
+# Repository password:
+#   Set via KOPIA_PASSWORD env var (from Secret velero-repo-credentials, key: repository-password)
 
 AWS_CREDENTIALS_FILE="${AWS_CREDENTIALS_FILE:-/etc/aws/credentials}"
+
+if [ -z "$KOPIA_PASSWORD" ]; then
+  echo "ERROR: KOPIA_PASSWORD env var not set. Set it from secret 'velero-repo-credentials' key 'repository-password'."
+  exit 1
+fi
 
 # Parse AWS credentials file if it exists
 if [ -f "$AWS_CREDENTIALS_FILE" ]; then
@@ -50,7 +57,7 @@ if [ -n "$bucket" ] && [ -n "$region" ] && [ -n "$s3Url" ]; then
       exit 1
     fi
 
-    kopia repository connect s3 "${CONNECT_ARGS[@]}"
+    kopia repository connect s3 "${CONNECT_ARGS[@]}" --password="$KOPIA_PASSWORD"
     echo "Kopia repository connected successfully."
   fi
 else
