@@ -267,12 +267,20 @@ jobs:
           FULL_NAME="${{ steps.config.outputs.full-name }}"
           IS_ADDITIONAL="${{ matrix.is-additional }}"
 
+          # Extract major version (e.g., 1.31.3 -> 1)
+          MAJOR_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+')
+
           # Extract minor version (e.g., 1.31.3 -> 1.31)
           MINOR_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
 
+          # Generate timestamp (YYYYMMDDHHMMSS)
+          TIMESTAMP=$(date -u '+%Y%m%d%H%M%S')
+
           # Build tags list
           TAGS="${FULL_NAME}:${VERSION}"
+          TAGS="${TAGS}"$'\n'"${FULL_NAME}:${MAJOR_VERSION}"
           TAGS="${TAGS}"$'\n'"${FULL_NAME}:${MINOR_VERSION}"
+          TAGS="${TAGS}"$'\n'"${FULL_NAME}:${VERSION}-${TIMESTAMP}"
 
           # Add latest tag only for main branch and non-additional versions
           if [[ "${{ github.ref_name }}" == "main" && "$IS_ADDITIONAL" != "true" ]]; then
