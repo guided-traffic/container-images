@@ -1,6 +1,6 @@
 # Minimal Velero CLI container for in-cluster usage with Kubernetes service accounts
 # renovate: datasource=docker depName=debian versioning=docker
-FROM debian:12-slim
+FROM debian:13-slim
 
 # Build argument for Velero version (passed from image.yml version)
 ARG IMAGE_VERSION
