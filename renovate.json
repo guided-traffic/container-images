@@ -21,13 +21,10 @@
   ],
   "reviewers": [],
   "platformAutomerge": true,
+  "automerge": true,
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "packageRules": [
-    {
-      "description": "Auto-merge all updates when CI passes",
-      "automerge": true
-    },
     {
       "description": "Group all container image updates together",
       "matchFileNames": [
