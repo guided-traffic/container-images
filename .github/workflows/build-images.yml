@@ -72,10 +72,12 @@ jobs:
                 fi
               else
                 # Check if files changed in this directory (for non-force builds)
-                # Always rebuild for scheduled runs (weekly rebuild), force rebuild, or workflow dispatch
+                # Always rebuild for scheduled runs (weekly rebuild), force rebuild, workflow dispatch,
+                # or when the workflow file itself changed (build process may have changed)
                 if [[ "${{ github.event.inputs.force_rebuild }}" != "true" ]] && \
                    [[ "${{ github.event_name }}" != "schedule" ]] && \
                    [[ "${{ github.event_name }}" != "workflow_dispatch" ]] && \
+                   ! git diff --name-only HEAD~1 HEAD | grep -q "^\.github/workflows/" && \
                    ! git diff --name-only HEAD~1 HEAD | grep -q "^${dir}"; then
                   continue
                 fi
