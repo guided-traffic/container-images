@@ -19,8 +19,7 @@ if [ -n "$bucket" ] && [ -n "$region" ] && [ -n "$s3Url" ]; then
     kopia repository connect s3 \
       --bucket="$bucket" \
       --region="$region" \
-      --endpoint="$endpoint" \
-      --disable-tls-verification=false
+      --endpoint="$endpoint"
     echo "Kopia repository connected successfully."
   fi
 else
