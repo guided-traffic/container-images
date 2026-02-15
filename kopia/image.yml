@@ -1,0 +1,14 @@
+# Source: https://github.com/kopia/kopia
+name: kopia
+# renovate: datasource=github-releases depName=kopia/kopia versioning=semver extractVersion=^v?(?<version>.*)$
+version: 0.22.3
+description: Debian minimal container with Kopia backup tool and Kopia UI
+category:
+  - debian
+  - kopia
+  - regular build
+registry: guidedtraffic
+maintainer: guided-traffic.com
+platforms:
+  - linux/amd64
+  - linux/arm64
