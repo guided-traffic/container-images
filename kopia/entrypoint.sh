@@ -6,6 +6,19 @@ set -e
 #   bucket  - S3 bucket name
 #   region  - AWS region
 #   s3Url   - S3 endpoint URL (e.g. https://s3.eu-central-1.amazonaws.com)
+# AWS credentials file (from Secret current-aws-credentials, key: credentials):
+#   Mounted at AWS_CREDENTIALS_FILE (default: /etc/aws/credentials)
+#   Format: standard AWS credentials file with [default] profile
+
+AWS_CREDENTIALS_FILE="${AWS_CREDENTIALS_FILE:-/etc/aws/credentials}"
+
+# Parse AWS credentials file if it exists
+if [ -f "$AWS_CREDENTIALS_FILE" ]; then
+  echo "Parsing AWS credentials from ${AWS_CREDENTIALS_FILE}..."
+  AWS_ACCESS_KEY_ID=$(grep -E '^\s*aws_access_key_id\s*=' "$AWS_CREDENTIALS_FILE" | head -1 | sed 's/.*=\s*//' | tr -d ' ')
+  AWS_SECRET_ACCESS_KEY=$(grep -E '^\s*aws_secret_access_key\s*=' "$AWS_CREDENTIALS_FILE" | head -1 | sed 's/.*=\s*//' | tr -d ' ')
+  AWS_SESSION_TOKEN=$(grep -E '^\s*aws_session_token\s*=' "$AWS_CREDENTIALS_FILE" | head -1 | sed 's/.*=\s*//' | tr -d ' ')
+fi
 
 if [ -n "$bucket" ] && [ -n "$region" ] && [ -n "$s3Url" ]; then
   # Strip https:// prefix from s3Url for kopia --endpoint
@@ -16,10 +29,28 @@ if [ -n "$bucket" ] && [ -n "$region" ] && [ -n "$s3Url" ]; then
     echo "Kopia repository already connected."
   else
     echo "Connecting to S3 repository: s3://${bucket} (${region})..."
-    kopia repository connect s3 \
-      --bucket="$bucket" \
-      --region="$region" \
+
+    # Build connect command with credentials
+    CONNECT_ARGS=(
+      --bucket="$bucket"
+      --region="$region"
       --endpoint="$endpoint"
+    )
+
+    if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+      CONNECT_ARGS+=(
+        --access-key="$AWS_ACCESS_KEY_ID"
+        --secret-access-key="$AWS_SECRET_ACCESS_KEY"
+      )
+      if [ -n "$AWS_SESSION_TOKEN" ]; then
+        CONNECT_ARGS+=(--session-token="$AWS_SESSION_TOKEN")
+      fi
+    else
+      echo "ERROR: AWS credentials not found. Ensure the secret is mounted at ${AWS_CREDENTIALS_FILE}."
+      exit 1
+    fi
+
+    kopia repository connect s3 "${CONNECT_ARGS[@]}"
     echo "Kopia repository connected successfully."
   fi
 else
