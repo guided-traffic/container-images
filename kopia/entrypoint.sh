@@ -27,5 +27,18 @@ else
   echo "WARNING: S3 environment variables (bucket, region, s3Url) not set. Skipping auto-connect."
 fi
 
-# Execute the provided command (e.g. "sleep infinity" or "kopia ...")
+# Start Kopia web UI server in the background on port 80
+KOPIA_UI_PORT=${KOPIA_UI_PORT:-80}
+if kopia repository status &>/dev/null; then
+  echo "Starting Kopia server on port ${KOPIA_UI_PORT}..."
+  kopia server start \
+    --address="0.0.0.0:${KOPIA_UI_PORT}" \
+    --insecure \
+    --without-password &
+  echo "Kopia server started on port ${KOPIA_UI_PORT}."
+else
+  echo "WARNING: No repository connected. Kopia server not started."
+fi
+
+# Execute the provided command (e.g. "sleep infinity")
 exec "$@"

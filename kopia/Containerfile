@@ -18,10 +18,8 @@ RUN apt-get update && \
 # kopia uses amd64/arm64 which matches TARGETARCH directly
 RUN curl -L -o /tmp/kopia.deb \
     "https://github.com/kopia/kopia/releases/download/v${IMAGE_VERSION}/kopia_${IMAGE_VERSION}_linux_${TARGETARCH}.deb" && \
-    curl -L -o /tmp/kopia-ui.deb \
-    "https://github.com/kopia/kopia/releases/download/v${IMAGE_VERSION}/kopia-ui_${IMAGE_VERSION}_${TARGETARCH}.deb" && \
     apt-get update && \
-    apt-get install -y /tmp/kopia.deb /tmp/kopia-ui.deb && \
+    apt-get install -y /tmp/kopia.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*.deb
 
@@ -45,12 +43,12 @@ USER kopia
 # Set working directory
 WORKDIR /app
 
-# Kopia server UI port
-EXPOSE 51515
+# Kopia server web UI port
+EXPOSE 80
 
 # Labels
 LABEL org.opencontainers.image.title="Kopia" \
-      org.opencontainers.image.description="Debian minimal container with Kopia backup tool and Kopia UI" \
+      org.opencontainers.image.description="Debian minimal container with Kopia backup tool and web UI" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.vendor="guided-traffic.com" \
       org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
