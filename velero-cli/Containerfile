@@ -1,0 +1,58 @@
+# Minimal Velero CLI container for in-cluster usage with Kubernetes service accounts
+# renovate: datasource=docker depName=debian versioning=docker
+FROM debian:12-slim
+
+# Build argument for Velero version (passed from image.yml version)
+ARG IMAGE_VERSION
+
+# Update package lists and install security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    ca-certificates \
+    curl \
+    tar \
+    jq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install Velero CLI binary
+RUN ARCH=$(dpkg --print-architecture) && \
+    echo "Installing Velero CLI version: v${IMAGE_VERSION} for ${ARCH}" && \
+    curl -L -o /tmp/velero.tar.gz \
+      "https://github.com/vmware-tanzu/velero/releases/download/v${IMAGE_VERSION}/velero-v${IMAGE_VERSION}-linux-${ARCH}.tar.gz" && \
+    tar -xzf /tmp/velero.tar.gz -C /tmp && \
+    mv /tmp/velero-v${IMAGE_VERSION}-linux-${ARCH}/velero /usr/local/bin/velero && \
+    chmod +x /usr/local/bin/velero && \
+    rm -rf /tmp/velero*
+
+# Verify installation
+RUN velero version --client-only
+
+# Create non-root user for security
+RUN groupadd -r velero && useradd -r -g velero -d /home/velero -m velero
+
+# Create scratch/working directory
+RUN mkdir -p /var/velero && chown -R velero:velero /var/velero
+
+# Configure for in-cluster Kubernetes service account usage
+# The service account token is auto-mounted at this path by Kubernetes
+ENV KUBECONFIG=""
+ENV VELERO_NAMESPACE="velero"
+
+# Switch to non-root user
+USER velero
+
+# Set working directory
+WORKDIR /var/velero
+
+# Labels
+LABEL org.opencontainers.image.title="Velero CLI" \
+      org.opencontainers.image.description="Minimal Debian container with Velero CLI for in-cluster backup and restore operations using Kubernetes service accounts" \
+      org.opencontainers.image.version="${IMAGE_VERSION}" \
+      org.opencontainers.image.vendor="guided-traffic.com" \
+      org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
+
+# Default command
+ENTRYPOINT ["/usr/local/bin/velero"]
+CMD ["--help"]
