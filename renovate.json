@@ -25,19 +25,8 @@
   "automergeStrategy": "squash",
   "packageRules": [
     {
-      "description": "Auto-merge only patch updates (e.g., 1.2.3 -> 1.2.4)",
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "description": "Auto-merge all updates when CI passes",
       "automerge": true
-    },
-    {
-      "description": "Require manual review for major and minor updates",
-      "matchUpdateTypes": [
-        "major",
-        "minor"
-      ],
-      "automerge": false
     },
     {
       "description": "Group all container image updates together",
