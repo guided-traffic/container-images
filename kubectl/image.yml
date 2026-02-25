@@ -1,11 +1,13 @@
 name: kubectl
 # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=semver extractVersion=^v?(?<version>.*)$
 version: 1.35.1
-description: Ubuntu 24.04 kubectl container for Velero with glibc 2.39
+# renovate: datasource=github-releases depName=mikefarah/yq versioning=semver extractVersion=^v?(?<version>.*)$
+yq_version: 4.44.3
+description: Ubuntu minimal container with kubectl and yq for Kubernetes operations
 category:
   - ubuntu
   - kubernetes
-  - velero
+  - tools
 registry: guidedtraffic
 maintainer: guided-traffic.com
 platforms:
