@@ -1,69 +1,43 @@
-# Ubuntu minimal base image with latest patches, kubectl and yq
+# Ubuntu 24.04 base image with glibc 2.39 – required by Velero's injected /tmp/sh binary
 # renovate: datasource=docker depName=ubuntu versioning=docker
 FROM ubuntu:24.04
 
-# Build arguments (kubectl version from image.yml version field, yq from yq_version field)
+# Build arguments (kubectl version from image.yml version field)
 ARG KUBECTL_VERSION
-ARG YQ_VERSION
 ARG IMAGE_VERSION
 ARG TARGETARCH
 
 # Set labels for container metadata
 LABEL maintainer="guided-traffic.com"
-LABEL description="Ubuntu minimal container with kubectl v${KUBECTL_VERSION} and yq v${YQ_VERSION}"
+LABEL description="Ubuntu 24.04 kubectl container for Velero (glibc 2.39)"
 LABEL version="${IMAGE_VERSION}"
 LABEL kubectl.version="${KUBECTL_VERSION}"
-LABEL yq.version="${YQ_VERSION}"
-LABEL org.opencontainers.image.title="kubectl + yq"
-LABEL org.opencontainers.image.description="Production-ready kubectl and yq utilities"
+LABEL org.opencontainers.image.title="kubectl"
+LABEL org.opencontainers.image.description="kubectl container for Velero with glibc 2.39"
 LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
 LABEL org.opencontainers.image.source="https://github.com/guided-traffic/container-images"
 
 # Update package lists and install security updates
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y \
-    # Basic shell and utilities
+    apt-get install -y --no-install-recommends \
     bash \
     curl \
     ca-certificates \
-    gnupg \
-    git \
-    gettext \
-    procps \
     jq \
-    # Clean up package cache to reduce image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install kubectl
-# Map TARGETARCH to kubectl architecture naming
-RUN KUBECTL_ARCH=$(case ${TARGETARCH} in \
-        amd64) echo "amd64" ;; \
-        arm64) echo "arm64" ;; \
-        *) echo ${TARGETARCH} ;; \
-    esac) && \
-    echo "Installing kubectl version: v${KUBECTL_VERSION} for ${KUBECTL_ARCH}" && \
-    curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/kubectl" && \
-    curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/kubectl.sha256" && \
+RUN echo "Installing kubectl version: v${KUBECTL_VERSION} for ${TARGETARCH}" && \
+    curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl" && \
+    curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl.sha256" && \
     echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check && \
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
     rm kubectl kubectl.sha256
 
-# Install yq (always latest version)
-# Map TARGETARCH to yq architecture naming
-RUN YQ_ARCH=$(case ${TARGETARCH} in \
-        amd64) echo "amd64" ;; \
-        arm64) echo "arm64" ;; \
-        *) echo ${TARGETARCH} ;; \
-    esac) && \
-    echo "Installing latest yq version for ${YQ_ARCH}" && \
-    curl -L "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${YQ_ARCH}" -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq
-
-# Verify installations
-RUN kubectl version --client && \
-    yq --version
+# Verify installation
+RUN kubectl version --client
 
 # Create non-root user for security
 RUN groupadd -r kubectl && useradd -r -g kubectl kubectl
@@ -74,5 +48,4 @@ WORKDIR /workspace
 # Switch to non-root user
 USER kubectl
 
-# Default command shows versions
-CMD ["sh", "-c", "echo 'kubectl:' && kubectl version --client && echo '\nyq:' && yq --version"]
+CMD ["kubectl", "version", "--client"]
