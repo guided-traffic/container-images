@@ -32,9 +32,17 @@ RUN apt-get update && \
     gettext \
     procps \
     jq \
+    # Statically linked busybox – provides a sh that works in any container
+    # regardless of glibc version (needed for Velero distroless init-container pattern)
+    busybox-static \
     # Clean up package cache to reduce image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Make `which sh` return a statically linked shell so that when Velero's
+# init-container copies sh to /tmp, it works inside the distroless Velero
+# container which has an older glibc (2.36) than Ubuntu 24.04 (2.39).
+RUN ln -sf /bin/busybox /usr/local/bin/sh
 
 # Install kubectl
 # Map TARGETARCH to kubectl architecture naming
