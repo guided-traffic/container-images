@@ -404,7 +404,7 @@ jobs:
 
       - name: Generate SLSA Provenance
         if: github.event_name != 'pull_request'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ steps.config.outputs.full-name }}
           subject-digest: ${{ steps.build.outputs.digest }}
