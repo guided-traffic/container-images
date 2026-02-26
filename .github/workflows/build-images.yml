@@ -251,6 +251,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker-container
+          # Use native snapshotter to avoid overlay-on-overlay mount failures
+          # on self-hosted runners where Docker already uses overlay2
+          buildkitd-flags: --oci-worker-snapshotter=native
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
