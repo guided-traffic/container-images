@@ -1,7 +1,7 @@
 # Source: https://github.com/vmware-tanzu/velero
 name: velero-cli
 # renovate: datasource=github-releases depName=vmware-tanzu/velero versioning=semver extractVersion=^v?(?<version>.*)$
-version: 1.18.0
+version: 1.18.1
 description: Minimal Debian container with Velero CLI configured for in-cluster usage with service accounts
 category:
   - debian
