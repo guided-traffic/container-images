@@ -1,7 +1,7 @@
 # Source: https://github.com/kopia/kopia
 name: kopia
 # renovate: datasource=github-releases depName=kopia/kopia versioning=semver extractVersion=^v?(?<version>.*)$
-version: 0.23.0
+version: 0.23.1
 description: Debian minimal container with Kopia backup tool and Kopia UI
 category:
   - debian
