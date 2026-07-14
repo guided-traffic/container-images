@@ -1,5 +1,5 @@
 # renovate: datasource=docker depName=debian versioning=docker
-FROM debian:13.5-slim
+FROM debian:13.6-slim
 
 # Build argument for Kopia version (passed from image.yml version)
 ARG IMAGE_VERSION
