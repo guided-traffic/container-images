@@ -1,7 +1,7 @@
 # Source: https://github.com/thanos-io/thanos
 name: thanos
 # renovate: datasource=github-releases depName=thanos-io/thanos versioning=semver extractVersion=^v?(?<version>.*)$
-version: 0.42.0
+version: 0.42.2
 description: Thanos is a minimal debian container with Thanos binary
 category:
   - debian
