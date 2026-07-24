@@ -334,7 +334,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v4
         with:
-          cosign-release: 'v2.2.2'
+          cosign-release: 'v3.1.2'
 
       - name: Install Syft for SBOM generation
         if: github.event_name != 'pull_request'
