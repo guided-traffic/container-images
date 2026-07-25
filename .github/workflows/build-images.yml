@@ -330,6 +330,33 @@ jobs:
           sbom: true
           outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=${{ steps.config.outputs.description }}
 
+      # cosign-installer >= v4.1.0 calls envsubst to expand its install-dir input.
+      # GitHub-hosted runners ship it; our self-hosted runners do not.
+      - name: Ensure envsubst is available
+        if: github.event_name != 'pull_request'
+        run: |
+          if command -v envsubst >/dev/null 2>&1; then
+            echo "envsubst already available"
+            exit 0
+          fi
+
+          SUDO=""
+          if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+            SUDO="sudo"
+          fi
+
+          if command -v apt-get >/dev/null 2>&1; then
+            $SUDO apt-get update
+            $SUDO apt-get install -y --no-install-recommends gettext-base
+          elif command -v apk >/dev/null 2>&1; then
+            $SUDO apk add --no-cache gettext
+          else
+            echo "::error::envsubst missing and no supported package manager found. Install gettext-base on the runner."
+            exit 1
+          fi
+
+          envsubst --version | head -1
+
       - name: Install Cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v4.1.2
