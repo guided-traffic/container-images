@@ -2,7 +2,7 @@ name: kubectl
 # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=semver extractVersion=^v?(?<version>.*)$
 version: 1.36.3
 # renovate: datasource=github-releases depName=mikefarah/yq versioning=semver extractVersion=^v?(?<version>.*)$
-yq_version: 4.44.3
+yq_version: 4.53.3
 description: Ubuntu minimal container with kubectl and yq for Kubernetes operations
 category:
   - ubuntu

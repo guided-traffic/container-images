@@ -58,15 +58,15 @@ RUN KUBECTL_ARCH=$(case ${TARGETARCH} in \
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
     rm kubectl kubectl.sha256
 
-# Install yq (always latest version)
+# Install yq (version pinned via yq_version in image.yml, kept current by Renovate)
 # Map TARGETARCH to yq architecture naming
 RUN YQ_ARCH=$(case ${TARGETARCH} in \
         amd64) echo "amd64" ;; \
         arm64) echo "arm64" ;; \
         *) echo ${TARGETARCH} ;; \
     esac) && \
-    echo "Installing latest yq version for ${YQ_ARCH}" && \
-    curl -L "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${YQ_ARCH}" -o /usr/local/bin/yq && \
+    echo "Installing yq v${YQ_VERSION} for ${YQ_ARCH}" && \
+    curl -L "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${YQ_ARCH}" -o /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
 # Verify installations

@@ -65,7 +65,7 @@
       ]
     },
     {
-      "description": "Pin Debian to version 12 (unapproved by Docker Scout)",
+      "description": "Pin Debian to major 13 (later majors unapproved by Docker Scout)",
       "matchDatasources": [
         "docker"
       ],
@@ -75,7 +75,7 @@
       "matchFileNames": [
         "thanos/Containerfile"
       ],
-      "allowedVersions": "<=12",
+      "allowedVersions": "<=13",
       "enabled": true
     }
   ],
@@ -87,7 +87,7 @@
         "/(^|/)image\\.ya?ml$/"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\nversion:\\s*(?<currentValue>\\S+)"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n[a-z0-9_]*version:\\s*(?<currentValue>\\S+)"
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}"
