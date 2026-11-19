@@ -1,0 +1,14 @@
+# Source: https://github.com/actions/runner
+name: actions-runner
+# renovate: datasource=github-releases depName=actions/runner versioning=semver extractVersion=^v?(?<version>.*)$
+version: 2.338.2
+description: GitHub Actions runner with build tools and ClamAV and the browser libraries that jobs would otherwise install on every run
+category:
+  - ubuntu
+  - ci
+  - tools
+registry: guidedtraffic
+maintainer: guided-traffic.com
+platforms:
+  - linux/amd64
+  - linux/arm64

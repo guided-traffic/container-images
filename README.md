@@ -16,6 +16,7 @@ All images are published to Docker Hub: **[guidedtraffic on Docker Hub](https://
 
 | Image | Description | Docker Hub |
 |-------|-------------|------------|
+| `actions-runner` | GitHub Actions runner with build tools, ClamAV and Chromium's libraries preinstalled | [guidedtraffic/actions-runner](https://hub.docker.com/r/guidedtraffic/actions-runner) |
 | `etcd-client` | Ubuntu minimal with etcd client tools | [guidedtraffic/etcd-client](https://hub.docker.com/r/guidedtraffic/etcd-client) |
 | `network-debug` | Network debugging toolkit | [guidedtraffic/network-debug](https://hub.docker.com/r/guidedtraffic/network-debug) |
 | `thanos` | Thanos monitoring on Debian slim | [guidedtraffic/thanos](https://hub.docker.com/r/guidedtraffic/thanos) |
